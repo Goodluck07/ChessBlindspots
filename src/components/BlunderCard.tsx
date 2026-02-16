@@ -69,48 +69,40 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
   };
 
   const getOutcomeMessage = (): string => {
-    const beforePawns = blunder.evalBefore / 100;
     const afterPawns = blunder.evalAfter / 100;
     const evalSwing = Math.abs(blunder.evalDrop / 100);
-    const wasWinning = beforePawns > 1.5;
-    const wasEqual = beforePawns >= -1.5 && beforePawns <= 1.5;
     const pieceName = getPieceName(blunder.pieceMoved);
 
-    let whatHappened = '';
+    // Primary message: what went wrong
     if (Math.abs(afterPawns) > 50) {
-      whatHappened = `Moving your ${pieceName} allowed checkmate.`;
-    } else if (blunder.bestMoveWasCapture && !blunder.wasCapture) {
-      whatHappened = `You missed a winning capture.`;
-    } else if (blunder.wasCapture && evalSwing > 3) {
-      whatHappened = `That ${pieceName} capture lost material.`;
-    } else if (evalSwing > 3) {
-      whatHappened = `Your ${pieceName} move cost ~${evalSwing.toFixed(0)} pawns.`;
-    } else if (evalSwing > 1.5) {
-      whatHappened = `That ${pieceName} move gave up a strong position.`;
-    } else {
-      whatHappened = `Your ${pieceName} move weakened your position.`;
+      return `Moving your ${pieceName} allowed checkmate. Always check for forcing moves before playing.`;
     }
 
-    let outcome = '';
-    if (blunder.gameResult === 'loss') {
-      if (wasWinning) {
-        outcome = `You were winning, but ${blunder.opponent} came back.`;
-      } else if (wasEqual) {
-        outcome = `This gave ${blunder.opponent} a winning advantage.`;
-      } else {
-        outcome = `${blunder.opponent} converted this into a win.`;
-      }
-    } else if (blunder.gameResult === 'win') {
-      outcome = `${blunder.opponent} didn't punish this.`;
-    } else {
-      if (wasWinning) {
-        outcome = `This let ${blunder.opponent} escape with a draw.`;
-      } else {
-        outcome = `Game ended in a draw.`;
-      }
+    if (blunder.bestMoveWasCapture && !blunder.wasCapture) {
+      return `You missed a winning capture. Before each move, scan for undefended pieces you can take.`;
     }
 
-    return `${whatHappened} ${outcome}`;
+    if (blunder.wasCapture && evalSwing > 3) {
+      return `That capture lost material. The piece you took was defended or led to a worse trade.`;
+    }
+
+    if (evalSwing > 5) {
+      return `This ${pieceName} move hung material or missed a tactic. Take time to check if your pieces are safe after each move.`;
+    }
+
+    if (evalSwing > 3) {
+      return `Your ${pieceName} weakened a critical square or allowed a strong reply. Consider your opponent's best response.`;
+    }
+
+    if (blunder.gamePhase === 'opening') {
+      return `This ${pieceName} move violated opening principles. Focus on development, center control, and king safety.`;
+    }
+
+    if (blunder.gamePhase === 'endgame') {
+      return `This ${pieceName} move was inaccurate in the endgame. Piece activity and pawn structure matter most here.`;
+    }
+
+    return `Your ${pieceName} move gave up positional advantage. Look for more active squares for your pieces.`;
   };
 
   const outcomeMessage = getOutcomeMessage();

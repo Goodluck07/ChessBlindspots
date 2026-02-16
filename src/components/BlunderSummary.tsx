@@ -6,8 +6,10 @@ interface BlunderSummaryProps {
 
 interface Pattern {
   type: string;
-  count: number;
-  description: string;
+  icon: string;
+  label: string;
+  value: string;
+  color: string;
 }
 
 function detectPatterns(blunders: Blunder[]): Pattern[] {
@@ -19,18 +21,22 @@ function detectPatterns(blunders: Blunder[]): Pattern[] {
     pieceCount[b.pieceMoved] = (pieceCount[b.pieceMoved] || 0) + 1;
   });
 
-  // Find most blundered piece
   const mostBlunderedPiece = Object.entries(pieceCount)
     .sort((a, b) => b[1] - a[1])[0];
 
   if (mostBlunderedPiece && mostBlunderedPiece[1] >= 2) {
+    const pieceIcons: Record<string, string> = {
+      'K': 'K', 'Q': 'Q', 'R': 'R', 'B': 'B', 'N': 'N', 'P': 'P'
+    };
     const pieceNames: Record<string, string> = {
-      'K': 'king', 'Q': 'queen', 'R': 'rook', 'B': 'bishop', 'N': 'knight', 'P': 'pawn'
+      'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn'
     };
     patterns.push({
       type: 'piece',
-      count: mostBlunderedPiece[1],
-      description: `${mostBlunderedPiece[1]} of your blunders involved your ${pieceNames[mostBlunderedPiece[0]] || 'pieces'}`,
+      icon: pieceIcons[mostBlunderedPiece[0]] || '?',
+      label: 'Trouble Piece',
+      value: `${pieceNames[mostBlunderedPiece[0]]} (${mostBlunderedPiece[1]}x)`,
+      color: '#e6a23c',
     });
   }
 
@@ -45,10 +51,17 @@ function detectPatterns(blunders: Blunder[]): Pattern[] {
     .sort((a, b) => b[1] - a[1])[0];
 
   if (worstPhase && worstPhase[1] >= 2) {
+    const phaseLabels: Record<string, string> = {
+      opening: 'Opening',
+      middlegame: 'Middlegame',
+      endgame: 'Endgame'
+    };
     patterns.push({
       type: 'phase',
-      count: worstPhase[1],
-      description: `${worstPhase[1]} blunders happened in the ${worstPhase[0]}`,
+      icon: worstPhase[0] === 'opening' ? '1' : worstPhase[0] === 'middlegame' ? '2' : '3',
+      label: 'Weak Phase',
+      value: `${phaseLabels[worstPhase[0]]} (${worstPhase[1]}x)`,
+      color: '#fa412d',
     });
   }
 
@@ -57,35 +70,33 @@ function detectPatterns(blunders: Blunder[]): Pattern[] {
   if (missedCaptures >= 2) {
     patterns.push({
       type: 'capture',
-      count: missedCaptures,
-      description: `${missedCaptures} times you missed a winning capture`,
+      icon: 'x',
+      label: 'Missed Captures',
+      value: `${missedCaptures} opportunities`,
+      color: '#ff6b6b',
     });
   }
 
-  // Count by time control
-  const timeCount: Record<string, number> = {};
-  blunders.forEach(b => {
-    timeCount[b.timeClass] = (timeCount[b.timeClass] || 0) + 1;
+  // Average eval drop
+  const avgDrop = blunders.reduce((sum, b) => sum + b.evalDrop, 0) / blunders.length / 100;
+  patterns.push({
+    type: 'avg',
+    icon: '-',
+    label: 'Avg. Drop',
+    value: `${avgDrop.toFixed(1)} pawns`,
+    color: '#81b64c',
   });
-
-  const worstTimeControl = Object.entries(timeCount)
-    .sort((a, b) => b[1] - a[1])[0];
-
-  if (worstTimeControl && worstTimeControl[1] >= 2 && Object.keys(timeCount).length > 1) {
-    patterns.push({
-      type: 'time',
-      count: worstTimeControl[1],
-      description: `${worstTimeControl[1]} blunders came from ${worstTimeControl[0]} games`,
-    });
-  }
 
   // Count blunders that led to losses
   const costlyBlunders = blunders.filter(b => b.gameResult === 'loss').length;
-  if (costlyBlunders >= 2) {
+  if (costlyBlunders >= 1) {
+    const costPercent = Math.round((costlyBlunders / blunders.length) * 100);
     patterns.push({
       type: 'costly',
-      count: costlyBlunders,
-      description: `${costlyBlunders} of these blunders led to losses`,
+      icon: '!',
+      label: 'Cost Games',
+      value: `${costlyBlunders} losses (${costPercent}%)`,
+      color: '#fa412d',
     });
   }
 
@@ -95,10 +106,8 @@ function detectPatterns(blunders: Blunder[]): Pattern[] {
 function generateSummary(blunders: Blunder[]): string {
   if (blunders.length === 0) return '';
 
-  // Build a natural summary
   const parts: string[] = [];
 
-  // Find the dominant pattern
   const phaseCount: Record<string, number> = { opening: 0, middlegame: 0, endgame: 0 };
   const pieceCount: Record<string, number> = {};
   let missedCaptures = 0;
@@ -116,36 +125,24 @@ function generateSummary(blunders: Blunder[]): string {
     'K': 'king', 'Q': 'queen', 'R': 'rook', 'B': 'bishop', 'N': 'knight', 'P': 'pawn'
   };
 
-  // Main insight
   if (worstPhase[1] >= Math.ceil(blunders.length * 0.6)) {
-    parts.push(`Most of your mistakes happen in the ${worstPhase[0]}.`);
+    parts.push(`Focus on your ${worstPhase[0]} play.`);
   }
 
   if (worstPiece[1] >= Math.ceil(blunders.length * 0.4)) {
-    parts.push(`Watch your ${pieceNames[worstPiece[0]] || 'pieces'} moves more carefully.`);
+    parts.push(`Be extra careful with ${pieceNames[worstPiece[0]]} moves.`);
   }
 
   if (missedCaptures >= Math.ceil(blunders.length * 0.4)) {
-    parts.push(`You're missing winning captures - slow down and look for threats.`);
+    parts.push(`Scan for captures before each move.`);
   }
 
-  // Check time control pattern
-  const timeCount: Record<string, number> = {};
-  blunders.forEach(b => {
-    timeCount[b.timeClass] = (timeCount[b.timeClass] || 0) + 1;
-  });
-  const worstTime = Object.entries(timeCount).sort((a, b) => b[1] - a[1])[0];
-  if (worstTime[1] >= Math.ceil(blunders.length * 0.6) && Object.keys(timeCount).length > 1) {
-    parts.push(`Consider playing slower time controls to reduce blunders.`);
-  }
-
-  // Fallback
   if (parts.length === 0) {
     const losses = blunders.filter(b => b.gameResult === 'loss').length;
     if (losses > blunders.length / 2) {
-      parts.push(`These blunders are costing you games. Take an extra moment before making your move.`);
+      parts.push(`Slow down - these blunders are costing games.`);
     } else {
-      parts.push(`Keep practicing! Focus on checking for threats before each move.`);
+      parts.push(`Check for threats before each move.`);
     }
   }
 
@@ -159,61 +156,126 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
   const summary = generateSummary(blunders);
 
   return (
-    <div style={{
+    <div className="fade-in" style={{
       backgroundColor: '#1e1c1a',
       border: '1px solid #3d3a37',
-      borderRadius: '8px',
-      padding: '20px',
+      borderRadius: '12px',
+      padding: '24px',
       marginTop: '24px',
     }}>
       <h3 style={{
-        margin: '0 0 16px 0',
-        color: '#81b64c',
-        fontSize: '1.1em',
+        margin: '0 0 20px 0',
+        color: '#ffffff',
+        fontSize: '1.2em',
         fontWeight: 600,
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
       }}>
+        <span style={{
+          width: '28px',
+          height: '28px',
+          backgroundColor: '#81b64c',
+          borderRadius: '6px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          fontSize: '0.8em',
+          color: '#1a1a1a',
+          fontWeight: 700,
+        }}>
+          i
+        </span>
         Pattern Analysis
       </h3>
 
-      {patterns.length > 0 && (
+      {/* Pattern Cards Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+        gap: '12px',
+        marginBottom: '20px',
+      }}>
+        {patterns.map((pattern, i) => (
+          <div
+            key={i}
+            style={{
+              backgroundColor: '#272522',
+              borderRadius: '10px',
+              padding: '16px',
+              border: '1px solid #3d3a37',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '8px',
+            }}
+          >
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}>
+              <span style={{
+                width: '24px',
+                height: '24px',
+                backgroundColor: `${pattern.color}20`,
+                color: pattern.color,
+                borderRadius: '4px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '0.75em',
+                fontWeight: 700,
+              }}>
+                {pattern.icon}
+              </span>
+              <span style={{
+                color: '#989795',
+                fontSize: '0.75em',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                {pattern.label}
+              </span>
+            </div>
+            <span style={{
+              color: '#e0e0e0',
+              fontSize: '0.95em',
+              fontWeight: 500,
+            }}>
+              {pattern.value}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      {/* Takeaway */}
+      <div style={{
+        background: 'linear-gradient(135deg, rgba(129, 182, 76, 0.1) 0%, rgba(129, 182, 76, 0.05) 100%)',
+        padding: '16px 20px',
+        borderRadius: '10px',
+        border: '1px solid rgba(129, 182, 76, 0.2)',
+      }}>
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          gap: '10px',
-          marginBottom: '16px',
+          alignItems: 'flex-start',
+          gap: '12px',
         }}>
-          {patterns.map((pattern, i) => (
-            <span
-              key={i}
-              style={{
-                backgroundColor: '#272522',
-                padding: '6px 12px',
-                borderRadius: '16px',
-                fontSize: '0.9em',
-                color: '#bababa',
-                border: '1px solid #3d3a37',
-              }}
-            >
-              {pattern.description}
-            </span>
-          ))}
+          <span style={{
+            color: '#81b64c',
+            fontSize: '1.2em',
+            lineHeight: 1,
+          }}>
+            *
+          </span>
+          <p style={{
+            margin: 0,
+            color: '#e0e0e0',
+            lineHeight: 1.6,
+            fontSize: '0.95em',
+          }}>
+            <strong style={{ color: '#81b64c' }}>Takeaway:</strong> {summary}
+          </p>
         </div>
-      )}
-
-      <div style={{
-        backgroundColor: '#272522',
-        padding: '14px 16px',
-        borderRadius: '6px',
-        borderLeft: '3px solid #81b64c',
-      }}>
-        <p style={{
-          margin: 0,
-          color: '#e0e0e0',
-          lineHeight: 1.5,
-          fontSize: '1em',
-        }}>
-          <strong style={{ color: '#81b64c' }}>Takeaway:</strong> {summary}
-        </p>
       </div>
     </div>
   );
