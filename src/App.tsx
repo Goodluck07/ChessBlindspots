@@ -114,10 +114,10 @@ function App() {
         position: 'sticky',
         top: 0,
         zIndex: 100,
-        backgroundColor: 'rgba(39, 37, 34, 0.95)',
-        backdropFilter: 'blur(10px)',
+        background: 'linear-gradient(180deg, rgba(39, 37, 34, 0.98) 0%, rgba(39, 37, 34, 0.95) 100%)',
+        backdropFilter: 'blur(12px)',
         borderBottom: '1px solid #3d3a37',
-        padding: '12px 20px',
+        padding: '14px 20px',
       }}>
         <div style={{
           maxWidth: '900px',
@@ -128,14 +128,30 @@ function App() {
           gap: '16px',
           flexWrap: 'wrap',
         }}>
-          <h1 style={{
-            margin: 0,
-            fontSize: '1.4em',
-            fontWeight: 600,
-            color: '#ffffff',
-          }}>
-            Chess Blindspots
-          </h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              background: 'linear-gradient(135deg, #81b64c 0%, #6a9a3d 100%)',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '18px',
+              boxShadow: '0 2px 8px rgba(129, 182, 76, 0.3)',
+            }}>
+              &#9816;
+            </div>
+            <h1 style={{
+              margin: 0,
+              fontSize: '1.3em',
+              fontWeight: 700,
+              color: '#ffffff',
+              letterSpacing: '-0.3px',
+            }}>
+              Chess Blindspots
+            </h1>
+          </div>
           <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
         </div>
       </header>
@@ -320,37 +336,90 @@ function App() {
 
           {/* Stats Bar */}
           <div style={{
-            display: 'flex',
-            gap: '24px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+            gap: '12px',
             marginBottom: '28px',
-            padding: '16px 20px',
-            backgroundColor: '#1e1c1a',
-            borderRadius: '8px',
-            border: '1px solid #3d3a37',
-            flexWrap: 'wrap',
           }}>
-            <div>
-              <div style={{ color: '#989795', fontSize: '0.75em', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{
+              padding: '16px 20px',
+              backgroundColor: '#1e1c1a',
+              borderRadius: '10px',
+              border: '1px solid #3d3a37',
+              borderLeft: '3px solid #fa412d',
+            }}>
+              <div style={{
+                color: '#989795',
+                fontSize: '0.7em',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                marginBottom: '6px',
+                fontWeight: 500,
+              }}>
                 Total Blunders
               </div>
-              <div style={{ color: '#fa412d', fontSize: '1.4em', fontWeight: 600 }}>
+              <div style={{
+                color: '#fa412d',
+                fontSize: '1.8em',
+                fontWeight: 700,
+                lineHeight: 1,
+              }}>
                 {filteredBlunders.length}
               </div>
             </div>
-            <div>
-              <div style={{ color: '#989795', fontSize: '0.75em', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Games With Blunders
+            <div style={{
+              padding: '16px 20px',
+              backgroundColor: '#1e1c1a',
+              borderRadius: '10px',
+              border: '1px solid #3d3a37',
+              borderLeft: '3px solid #81b64c',
+            }}>
+              <div style={{
+                color: '#989795',
+                fontSize: '0.7em',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                marginBottom: '6px',
+                fontWeight: 500,
+              }}>
+                Games Analyzed
               </div>
-              <div style={{ color: '#bababa', fontSize: '1.4em', fontWeight: 600 }}>
-                {Object.keys(blundersByGame).length}
+              <div style={{
+                color: '#81b64c',
+                fontSize: '1.8em',
+                fontWeight: 700,
+                lineHeight: 1,
+              }}>
+                {gamesAnalyzed}
               </div>
             </div>
-            <div>
-              <div style={{ color: '#989795', fontSize: '0.75em', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div style={{
+              padding: '16px 20px',
+              backgroundColor: '#1e1c1a',
+              borderRadius: '10px',
+              border: '1px solid #3d3a37',
+              borderLeft: '3px solid #e6a23c',
+            }}>
+              <div style={{
+                color: '#989795',
+                fontSize: '0.7em',
+                textTransform: 'uppercase',
+                letterSpacing: '0.8px',
+                marginBottom: '6px',
+                fontWeight: 500,
+              }}>
                 Worst Drop
               </div>
-              <div style={{ color: '#fa412d', fontSize: '1.4em', fontWeight: 600 }}>
-                {Math.abs(filteredBlunders[0]?.evalDrop / 100 || 0).toFixed(1)} pawns
+              <div style={{
+                color: '#e6a23c',
+                fontSize: '1.8em',
+                fontWeight: 700,
+                lineHeight: 1,
+              }}>
+                {Math.abs(filteredBlunders[0]?.evalDrop / 100 || 0).toFixed(1)}
+                <span style={{ fontSize: '0.5em', fontWeight: 500, marginLeft: '4px', color: '#989795' }}>
+                  pawns
+                </span>
               </div>
             </div>
           </div>
@@ -602,10 +671,12 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
         // Check if move was a capture
         const wasCapture = move.san.includes('x');
 
-        // Check if best move was a capture (has piece on destination square)
+        // Check if best move was a capture (has ENEMY piece on destination square)
         const tempChess = new Chess(fenBefore);
         const destSquare = bestMoveTo as import('chess.js').Square;
-        const bestMoveWasCapture = tempChess.get(destSquare) !== null;
+        const pieceOnDest = tempChess.get(destSquare);
+        const playerColorChar = playerColor === 'white' ? 'w' : 'b';
+        const bestMoveWasCapture = pieceOnDest != null && pieceOnDest.color !== playerColorChar;
 
         // Determine game phase based on move number and material
         let gamePhase: 'opening' | 'middlegame' | 'endgame' = 'middlegame';

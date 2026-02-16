@@ -7,9 +7,40 @@ interface BlunderCardProps {
   compact?: boolean;
 }
 
-function formatMove(san: string): string {
-  if (san === 'O-O' || san === '0-0') return 'Castle kingside';
-  if (san === 'O-O-O' || san === '0-0-0') return 'Castle queenside';
+// Get piece on a square from FEN
+function getPieceOnSquare(fen: string, square: string): string | null {
+  const pieceNames: Record<string, string> = {
+    'k': 'King', 'q': 'Queen', 'r': 'Rook', 'b': 'Bishop', 'n': 'Knight', 'p': 'Pawn',
+    'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn',
+  };
+
+  const file = square.charCodeAt(0) - 'a'.charCodeAt(0); // 0-7
+  const rank = parseInt(square[1]) - 1; // 0-7
+
+  const boardPart = fen.split(' ')[0];
+  const rows = boardPart.split('/').reverse(); // reverse so rank 1 is index 0
+
+  if (rank < 0 || rank > 7 || file < 0 || file > 7) return null;
+
+  const row = rows[rank];
+  let currentFile = 0;
+
+  for (const char of row) {
+    if (/\d/.test(char)) {
+      currentFile += parseInt(char);
+    } else {
+      if (currentFile === file) {
+        return pieceNames[char] || null;
+      }
+      currentFile++;
+    }
+  }
+  return null;
+}
+
+function formatMoveWithSquares(san: string, fromSquare: string, toSquare: string, fen: string): string {
+  if (san === 'O-O' || san === '0-0') return 'Castled kingside';
+  if (san === 'O-O-O' || san === '0-0-0') return 'Castled queenside';
 
   const pieces: Record<string, string> = {
     'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight',
@@ -20,27 +51,29 @@ function formatMove(san: string): string {
   const promoMatch = move.match(/=([QRBN])$/);
   let promotion = '';
   if (promoMatch) {
-    promotion = ` (promotes to ${pieces[promoMatch[1]]})`;
+    promotion = `, promoted to ${pieces[promoMatch[1]]}`;
     move = move.replace(/=[QRBN]$/, '');
   }
 
   const isCapture = move.includes('x');
-  move = move.replace('x', '');
-
   const pieceChar = move.match(/^[KQRBN]/)?.[0];
-  const destination = move.match(/[a-h][1-8]/)?.[0] || move;
-
   const piece = pieceChar ? pieces[pieceChar] : 'Pawn';
-  const action = isCapture ? 'takes' : 'to';
 
-  return `${piece} ${action} ${destination}${promotion}`;
+  if (isCapture) {
+    const capturedPiece = getPieceOnSquare(fen, toSquare);
+    if (capturedPiece) {
+      return `${piece} from ${fromSquare} captures ${capturedPiece} on ${toSquare}${promotion}`;
+    }
+    return `${piece} from ${fromSquare} captures on ${toSquare}${promotion}`;
+  }
+  return `${piece} from ${fromSquare} to ${toSquare}${promotion}`;
 }
 
 function formatUciMove(uci: string): string {
   if (uci.length < 4) return uci;
   const from = uci.slice(0, 2);
   const to = uci.slice(2, 4);
-  return `${from} to ${to}`;
+  return `${from} → ${to}`;
 }
 
 // Get severity level based on eval drop
@@ -63,50 +96,57 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
   const getPieceName = (piece: string): string => {
     const names: Record<string, string> = {
-      'K': 'king', 'Q': 'queen', 'R': 'rook', 'B': 'bishop', 'N': 'knight', 'P': 'pawn'
+      'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn'
     };
     return names[piece] || 'piece';
   };
 
+  const pieceName = getPieceName(blunder.pieceMoved);
+
+  // Position-specific insight
   const getOutcomeMessage = (): string => {
     const afterPawns = blunder.evalAfter / 100;
     const evalSwing = Math.abs(blunder.evalDrop / 100);
-    const pieceName = getPieceName(blunder.pieceMoved);
 
-    // Primary message: what went wrong
+    // Get pieces involved in the best move for more specific messages
+    const bestMovePiece = getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) || 'piece';
+    const targetPiece = getPieceOnSquare(blunder.fen, blunder.bestMoveTo);
+
     if (Math.abs(afterPawns) > 50) {
-      return `Moving your ${pieceName} allowed checkmate. Always check for forcing moves before playing.`;
+      return `Moving your ${pieceName} from ${blunder.moveFrom} to ${blunder.moveTo} opened a checkmate for your opponent. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} instead would have blocked the threat and kept you in the game.`;
     }
 
-    if (blunder.bestMoveWasCapture && !blunder.wasCapture) {
-      return `You missed a winning capture. Before each move, scan for undefended pieces you can take.`;
+    if (blunder.bestMoveWasCapture && !blunder.wasCapture && targetPiece) {
+      return `There was a free ${targetPiece} on ${blunder.bestMoveTo} you could have captured with your ${bestMovePiece} from ${blunder.bestMoveFrom}. Instead, your ${pieceName} move to ${blunder.moveTo} let that opportunity slip, costing ${evalSwing.toFixed(1)} pawns.`;
     }
 
     if (blunder.wasCapture && evalSwing > 3) {
-      return `That capture lost material. The piece you took was defended or led to a worse trade.`;
+      const capturedPiece = getPieceOnSquare(blunder.fen, blunder.moveTo);
+      const capturedDesc = capturedPiece ? `the ${capturedPiece}` : 'that piece';
+      return `Your ${pieceName} captured ${capturedDesc} on ${blunder.moveTo}, but it was defended. Your opponent recaptures and wins material. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was safer.`;
     }
 
     if (evalSwing > 5) {
-      return `This ${pieceName} move hung material or missed a tactic. Take time to check if your pieces are safe after each move.`;
+      return `Moving your ${pieceName} to ${blunder.moveTo} left another piece undefended. Playing your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have kept your pieces protected, saving ${evalSwing.toFixed(1)} pawns.`;
     }
 
     if (evalSwing > 3) {
-      return `Your ${pieceName} weakened a critical square or allowed a strong reply. Consider your opponent's best response.`;
+      return `Your ${pieceName} move to ${blunder.moveTo} allowed your opponent a strong tactical reply. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} avoids this and maintains your position.`;
     }
 
     if (blunder.gamePhase === 'opening') {
-      return `This ${pieceName} move violated opening principles. Focus on development, center control, and king safety.`;
+      return `Your ${pieceName} move to ${blunder.moveTo} on move ${blunder.moveNumber} wastes time in the opening. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} develops more efficiently or fights for the center.`;
     }
 
     if (blunder.gamePhase === 'endgame') {
-      return `This ${pieceName} move was inaccurate in the endgame. Piece activity and pawn structure matter most here.`;
+      return `In this endgame, your ${pieceName} on ${blunder.moveTo} is passive. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} is more active and gives your pieces better control.`;
     }
 
-    return `Your ${pieceName} move gave up positional advantage. Look for more active squares for your pieces.`;
+    return `Your ${pieceName} move from ${blunder.moveFrom} to ${blunder.moveTo} gave away ${evalSwing.toFixed(1)} pawns. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was the stronger continuation.`;
   };
 
   const outcomeMessage = getOutcomeMessage();
-  const movePlayedDisplay = formatMove(blunder.movePlayed);
+  const movePlayedDisplay = formatMoveWithSquares(blunder.movePlayed, blunder.moveFrom, blunder.moveTo, blunder.fen);
   const bestMoveDisplay = formatUciMove(blunder.bestMove);
 
   useEffect(() => {
@@ -126,7 +166,6 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
         [blunder.bestMoveTo]: { backgroundColor: 'rgba(129, 182, 76, 0.6)' },
       };
 
-  // Arrows showing the move
   const arrows = showBadMove
     ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: 'rgba(250, 65, 45, 0.85)' }]
     : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: 'rgba(129, 182, 76, 0.85)' }];
