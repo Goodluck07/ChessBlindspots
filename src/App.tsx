@@ -490,6 +490,30 @@ function App() {
         </div>
       )}
       </div>
+
+      {/* Footer */}
+      <footer style={{
+        textAlign: 'center',
+        padding: '24px 20px',
+        borderTop: '1px solid #3d3a37',
+        marginTop: '40px',
+        color: '#989795',
+        fontSize: '0.85em',
+      }}>
+        <a
+          href="https://github.com/Goodluck07/ChessBlindspots"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            color: '#81b64c',
+            textDecoration: 'none',
+          }}
+        >
+          View on GitHub
+        </a>
+        <span style={{ margin: '0 12px' }}>|</span>
+        <span>Built with Stockfish + React</span>
+      </footer>
     </>
   );
 }

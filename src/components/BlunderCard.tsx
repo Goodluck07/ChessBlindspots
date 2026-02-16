@@ -143,13 +143,15 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
+      className="fade-in"
       style={{
         border: '1px solid #3d3a37',
         borderRadius: '8px',
         padding: compact ? '14px' : '18px',
         backgroundColor: '#272522',
-        boxShadow: hovered ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
-        transition: 'box-shadow 0.2s ease',
+        boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.4)' : '0 2px 8px rgba(0,0,0,0.2)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
       }}
     >
       {/* Header */}

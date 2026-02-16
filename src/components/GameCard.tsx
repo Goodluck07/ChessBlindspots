@@ -9,17 +9,26 @@ interface GameCardProps {
 
 export function GameCard({ gameUrl, blunders }: GameCardProps) {
   const [expanded, setExpanded] = useState(false);
+  const [hovered, setHovered] = useState(false);
   const game = blunders[0];
 
   const worstDrop = Math.max(...blunders.map(b => b.evalDrop)) / 100;
 
   return (
-    <div style={{
-      backgroundColor: '#1e1c1a',
-      borderRadius: '10px',
-      border: '1px solid #3d3a37',
-      overflow: 'hidden',
-    }}>
+    <div
+      className="fade-in"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        backgroundColor: '#1e1c1a',
+        borderRadius: '10px',
+        border: '1px solid #3d3a37',
+        overflow: 'hidden',
+        boxShadow: hovered ? '0 6px 20px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.15)',
+        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
+        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
+      }}
+    >
       {/* Clickable Header */}
       <button
         onClick={() => setExpanded(!expanded)}
