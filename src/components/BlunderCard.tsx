@@ -43,9 +43,23 @@ function formatUciMove(uci: string): string {
   return `${from} to ${to}`;
 }
 
+// Get severity level based on eval drop
+function getSeverity(evalDrop: number): { label: string; color: string; bgColor: string } {
+  const pawns = evalDrop / 100;
+  if (pawns >= 6) {
+    return { label: 'Blunder', color: '#ff4444', bgColor: 'rgba(255, 68, 68, 0.15)' };
+  } else if (pawns >= 4) {
+    return { label: 'Blunder', color: '#fa412d', bgColor: 'rgba(250, 65, 45, 0.15)' };
+  } else {
+    return { label: 'Mistake', color: '#e6a23c', bgColor: 'rgba(230, 162, 60, 0.15)' };
+  }
+}
+
 export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
   const [hovered, setHovered] = useState(false);
   const [showBadMove, setShowBadMove] = useState(true);
+
+  const severity = getSeverity(blunder.evalDrop);
 
   const getPieceName = (piece: string): string => {
     const names: Record<string, string> = {
@@ -120,9 +134,10 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
         [blunder.bestMoveTo]: { backgroundColor: 'rgba(129, 182, 76, 0.6)' },
       };
 
+  // Arrows showing the move
   const arrows = showBadMove
-    ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: 'rgba(250, 65, 45, 0.8)' }]
-    : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: 'rgba(129, 182, 76, 0.8)' }];
+    ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: 'rgba(250, 65, 45, 0.85)' }]
+    : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: 'rgba(129, 182, 76, 0.85)' }];
 
   return (
     <div
@@ -144,15 +159,31 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
         alignItems: 'center',
         marginBottom: '14px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ color: '#fa412d', fontWeight: 600 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span style={{
+            padding: '4px 10px',
+            backgroundColor: severity.bgColor,
+            color: severity.color,
+            borderRadius: '4px',
+            fontSize: '0.8em',
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            {severity.label}
+            <span style={{ opacity: 0.8, fontSize: '0.9em' }}>
+              -{(blunder.evalDrop / 100).toFixed(1)}
+            </span>
+          </span>
+          <span style={{ color: '#bababa', fontWeight: 500 }}>
             Move {blunder.moveNumber}
           </span>
           <span style={{
             padding: '3px 8px',
             backgroundColor: '#3d3a37',
             borderRadius: '4px',
-            fontSize: '0.75em',
+            fontSize: '0.7em',
             color: '#989795',
             textTransform: 'capitalize',
           }}>
