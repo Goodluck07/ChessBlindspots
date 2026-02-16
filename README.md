@@ -100,7 +100,3 @@ Contributions are welcome! Feel free to open issues or submit PRs.
 ## License
 
 MIT
-
----
-
-Built with Claude Code
