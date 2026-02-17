@@ -158,17 +158,17 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
   const squareStyles: Record<string, React.CSSProperties> = showBadMove
     ? {
-        [blunder.moveFrom]: { backgroundColor: 'rgba(129, 182, 76, 0.6)' },
-        [blunder.moveTo]: { backgroundColor: 'rgba(250, 65, 45, 0.6)' },
+        [blunder.moveFrom]: { backgroundColor: 'rgba(247, 216, 96, 0.8)' },
+        [blunder.moveTo]: { backgroundColor: 'rgba(247, 216, 96, 0.8)' },
       }
     : {
-        [blunder.bestMoveFrom]: { backgroundColor: 'rgba(129, 182, 76, 0.6)' },
-        [blunder.bestMoveTo]: { backgroundColor: 'rgba(129, 182, 76, 0.6)' },
+        [blunder.bestMoveFrom]: { backgroundColor: 'rgba(129, 182, 76, 0.85)' },
+        [blunder.bestMoveTo]: { backgroundColor: 'rgba(129, 182, 76, 0.85)' },
       };
 
   const arrows = showBadMove
-    ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: 'rgba(250, 65, 45, 0.85)' }]
-    : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: 'rgba(129, 182, 76, 0.85)' }];
+    ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: '#d32f2f' }]
+    : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: '#5b9a32' }];
 
   return (
     <div
@@ -189,10 +189,12 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
       <div style={{
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center',
+        alignItems: 'flex-start',
         marginBottom: '14px',
+        gap: '8px',
+        flexWrap: 'wrap',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <span style={{
             padding: '4px 10px',
             backgroundColor: severity.bgColor,
@@ -203,13 +205,14 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
+            whiteSpace: 'nowrap',
           }}>
             {severity.label}
             <span style={{ opacity: 0.8, fontSize: '0.9em' }}>
               -{(blunder.evalDrop / 100).toFixed(1)}
             </span>
           </span>
-          <span style={{ color: '#bababa', fontWeight: 500 }}>
+          <span style={{ color: '#bababa', fontWeight: 500, whiteSpace: 'nowrap' }}>
             Move {blunder.moveNumber}
           </span>
           <span style={{
@@ -219,12 +222,21 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
             fontSize: '0.7em',
             color: '#989795',
             textTransform: 'capitalize',
+            whiteSpace: 'nowrap',
           }}>
             {blunder.gamePhase}
           </span>
         </div>
         {!compact && (
-          <span style={{ color: '#989795', fontSize: '0.85em' }}>
+          <span style={{
+            color: '#989795',
+            fontSize: '0.85em',
+            maxWidth: '150px',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+            flexShrink: 1,
+          }}>
             vs {blunder.opponent}
           </span>
         )}
@@ -232,33 +244,36 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
       <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
         {/* Chessboard */}
-        <div style={{
-          width: compact ? '220px' : '260px',
-          height: compact ? '220px' : '260px',
-          borderRadius: '6px',
-          overflow: 'hidden',
-          position: 'relative',
-          flexShrink: 0,
-        }}>
-          <Chessboard
-            options={{
-              position: blunder.fen,
-              boardOrientation: blunder.playerColor,
-              allowDragging: false,
-              squareStyles: squareStyles,
-              arrows: arrows,
-            }}
-          />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
           <div style={{
-            position: 'absolute',
-            bottom: '6px',
-            right: '6px',
-            backgroundColor: 'rgba(0,0,0,0.85)',
+            width: compact ? '220px' : '260px',
+            height: compact ? '220px' : '260px',
+            borderRadius: '6px',
+            overflow: 'hidden',
+          }}>
+            <Chessboard
+              options={{
+                position: blunder.fen,
+                boardOrientation: blunder.playerColor,
+                allowDragging: false,
+                squareStyles: squareStyles,
+                arrows: arrows,
+                darkSquareStyle: { backgroundColor: '#779556' },
+                lightSquareStyle: { backgroundColor: '#ebecd0' },
+              }}
+            />
+          </div>
+          {/* Move indicator badge - below board */}
+          <div style={{
+            backgroundColor: showBadMove ? 'rgba(250, 65, 45, 0.15)' : 'rgba(129, 182, 76, 0.15)',
             color: showBadMove ? '#fa412d' : '#81b64c',
-            padding: '4px 8px',
-            borderRadius: '4px',
-            fontSize: '0.7em',
+            padding: '5px 10px',
+            borderRadius: '5px',
+            fontSize: '0.75em',
             fontWeight: 600,
+            textAlign: 'center',
+            border: `1px solid ${showBadMove ? 'rgba(250, 65, 45, 0.3)' : 'rgba(129, 182, 76, 0.3)'}`,
+            transition: 'all 0.3s ease',
           }}>
             {showBadMove ? `You: ${blunder.movePlayed}` : `Best: ${blunder.bestMove}`}
           </div>

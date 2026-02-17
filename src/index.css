@@ -143,8 +143,12 @@ button {
   /* Stack header nav on mobile */
   header > div {
     flex-direction: column;
-    align-items: stretch !important;
+    align-items: center !important;
     gap: 12px !important;
+  }
+
+  header > div > div:first-child {
+    justify-content: center;
   }
 
   header h1 {
@@ -154,6 +158,12 @@ button {
 
   header nav {
     justify-content: center;
+    width: 100%;
+  }
+
+  header nav button {
+    padding: 8px 14px !important;
+    font-size: 0.85em !important;
   }
 
   /* Smaller padding on mobile */
@@ -166,5 +176,10 @@ button {
     width: 100% !important;
     max-width: 280px;
     margin: 0 auto;
+  }
+
+  /* Stats cards on mobile */
+  .stats-grid {
+    grid-template-columns: 1fr !important;
   }
 }

@@ -29,25 +29,25 @@ export function DemoBlunder() {
   const squareStyles: Record<string, React.CSSProperties> = showBadMove
     ? {
         [BLUNDER_FROM]: {
-          backgroundColor: 'rgba(129, 182, 76, 0.6)', // Green - starting square
+          backgroundColor: 'rgba(247, 216, 96, 0.8)', // Yellow - starting square
         },
         [BLUNDER_TO]: {
-          backgroundColor: 'rgba(250, 65, 45, 0.6)', // Red - bad destination
+          backgroundColor: 'rgba(247, 216, 96, 0.8)', // Yellow - destination
         },
       }
     : {
         [BEST_FROM]: {
-          backgroundColor: 'rgba(129, 182, 76, 0.6)', // Green - starting square
+          backgroundColor: 'rgba(129, 182, 76, 0.85)', // Green - starting square
         },
         [BEST_TO]: {
-          backgroundColor: 'rgba(129, 182, 76, 0.6)', // Green - good destination
+          backgroundColor: 'rgba(129, 182, 76, 0.85)', // Green - good destination
         },
       };
 
   // Dynamic arrow based on which move we're showing
   const arrows = showBadMove
-    ? [{ startSquare: BLUNDER_FROM, endSquare: BLUNDER_TO, color: 'rgba(250, 65, 45, 0.8)' }]
-    : [{ startSquare: BEST_FROM, endSquare: BEST_TO, color: 'rgba(129, 182, 76, 0.8)' }];
+    ? [{ startSquare: BLUNDER_FROM, endSquare: BLUNDER_TO, color: '#d32f2f' }]
+    : [{ startSquare: BEST_FROM, endSquare: BEST_TO, color: '#5b9a32' }];
 
   return (
     <div
@@ -83,40 +83,42 @@ export function DemoBlunder() {
 
       <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         {/* Chess Board with animated highlights */}
-        <div
-          style={{
-            width: '300px',
-            height: '300px',
-            borderRadius: '4px',
-            overflow: 'hidden',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-            position: 'relative',
-          }}
-        >
-          <Chessboard
-            options={{
-              position: SAMPLE_FEN,
-              boardOrientation: 'black',
-              allowDragging: false,
-              squareStyles: squareStyles,
-              arrows: arrows,
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div
+            style={{
+              width: '300px',
+              height: '300px',
+              borderRadius: '4px',
+              overflow: 'hidden',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
             }}
-          />
+          >
+            <Chessboard
+              options={{
+                position: SAMPLE_FEN,
+                boardOrientation: 'black',
+                allowDragging: false,
+                squareStyles: squareStyles,
+                arrows: arrows,
+                darkSquareStyle: { backgroundColor: '#779556' },
+                lightSquareStyle: { backgroundColor: '#ebecd0' },
+              }}
+            />
+          </div>
 
-          {/* Move indicator badge */}
+          {/* Move indicator badge - below board */}
           <div style={{
-            position: 'absolute',
-            bottom: '8px',
-            right: '8px',
-            backgroundColor: 'rgba(0,0,0,0.8)',
+            backgroundColor: showBadMove ? 'rgba(250, 65, 45, 0.15)' : 'rgba(129, 182, 76, 0.15)',
             color: showBadMove ? '#fa412d' : '#81b64c',
-            padding: '4px 10px',
-            borderRadius: '4px',
-            fontSize: '0.8em',
+            padding: '6px 12px',
+            borderRadius: '6px',
+            fontSize: '0.85em',
             fontWeight: 600,
-            transition: 'color 0.3s ease',
+            textAlign: 'center',
+            border: `1px solid ${showBadMove ? 'rgba(250, 65, 45, 0.3)' : 'rgba(129, 182, 76, 0.3)'}`,
+            transition: 'all 0.3s ease',
           }}>
-            {showBadMove ? 'Pawn g6?' : 'Queen e7!'}
+            {showBadMove ? 'You played: g7-g6' : 'Best move: Qd8-e7'}
           </div>
         </div>
 
