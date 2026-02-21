@@ -6,6 +6,7 @@ import { DemoBlunder } from './components/DemoBlunder';
 import { BlunderSummary } from './components/BlunderSummary';
 import { GameCard } from './components/GameCard';
 import { Navigation } from './components/Navigation';
+import { LandingPage } from './components/LandingPage';
 import { fetchRecentGames } from './services/chesscom';
 import { evaluatePosition, destroyEngine } from './services/stockfish';
 import type { Blunder, ChessGame, TimeClass } from './types';
@@ -26,6 +27,7 @@ const TIME_CLASS_LABELS: Record<TimeClass | 'all', string> = {
 };
 
 function App() {
+  const [showLanding, setShowLanding] = useState(true);
   const [currentPage, setCurrentPage] = useState<Page>('analyze');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,6 +109,10 @@ function App() {
     }
   };
 
+  if (showLanding) {
+    return <LandingPage onGetStarted={() => { setShowLanding(false); window.scrollTo(0, 0); }} />;
+  }
+
   return (
     <>
       {/* Sticky Header */}
@@ -128,7 +134,11 @@ function App() {
           gap: '16px',
           flexWrap: 'wrap',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div
+            onClick={() => { setShowLanding(true); window.scrollTo(0, 0); }}
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+            title="Back to home"
+          >
             <div style={{
               width: '32px',
               height: '32px',
@@ -660,6 +670,16 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
       if (evalDrop >= BLUNDER_THRESHOLD) {
         // Get best move from position before the blunder
         const bestResult = await evaluatePosition(fenBefore, ANALYSIS_DEPTH);
+
+        // Skip if Stockfish returned no valid best move (e.g. checkmate, timeout)
+        const isValidMove = bestResult.bestMove &&
+          bestResult.bestMove.length >= 4 &&
+          bestResult.bestMove !== '(none)' &&
+          bestResult.bestMove !== 'timeout';
+        if (!isValidMove) {
+          prevEval = currentEval;
+          continue;
+        }
 
         // Parse best move UCI notation (e.g., "e2e4" -> from: "e2", to: "e4")
         const bestMoveFrom = bestResult.bestMove.slice(0, 2);

@@ -20,7 +20,7 @@ export function UsernameForm({ onSubmit, loading }: UsernameFormProps) {
   const isDisabled = loading || !username.trim();
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '30px' }}>
+    <form onSubmit={handleSubmit} style={{ marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
       <input
         type="text"
         value={username}
@@ -35,8 +35,8 @@ export function UsernameForm({ onSubmit, loading }: UsernameFormProps) {
           backgroundColor: '#1e1c1a',
           border: `2px solid ${inputFocused ? '#81b64c' : '#3d3a37'}`,
           borderRadius: '6px',
-          marginRight: '12px',
-          width: '280px',
+          flex: '1 1 200px',
+          minWidth: '0',
           color: '#bababa',
           outline: 'none',
           transition: 'border-color 0.2s ease',

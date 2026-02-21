@@ -1,3 +1,7 @@
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
@@ -128,6 +132,13 @@ button {
 
 .fade-in {
   animation: fadeIn 0.3s ease forwards;
+}
+
+/* Landing page nav: hide text links on mobile, keep the CTA button */
+@media (max-width: 600px) {
+  .landing-nav-link {
+    display: none !important;
+  }
 }
 
 /* Mobile Responsive */
