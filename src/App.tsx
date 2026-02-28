@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Chess } from 'chess.js';
 import { UsernameForm } from './components/UsernameForm';
 import { BlunderCard } from './components/BlunderCard';
@@ -7,6 +7,7 @@ import { BlunderSummary } from './components/BlunderSummary';
 import { GameCard } from './components/GameCard';
 import { Navigation } from './components/Navigation';
 import { LandingPage } from './components/LandingPage';
+import { InsightsPage } from './components/InsightsPage';
 import { fetchRecentGames } from './services/chesscom';
 import { evaluatePosition, destroyEngine } from './services/stockfish';
 import type { Blunder, ChessGame, TimeClass } from './types';
@@ -17,6 +18,63 @@ const BLUNDER_THRESHOLD = 200; // centipawns (2 pawns)
 const MAX_BLUNDERS_TO_SHOW = 5;
 const GAMES_TO_ANALYZE = 10;
 const ANALYSIS_DEPTH = 12;
+const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+// ── Cache utilities ──────────────────────────────────────────
+interface CachedAnalysis {
+  username: string;
+  blunders: Blunder[];
+  gamesAnalyzed: number;
+  timestamp: number;
+}
+
+function cacheKey(username: string) {
+  return `chessblinds_${username.toLowerCase()}`;
+}
+
+function saveToCache(username: string, blunders: Blunder[], gamesAnalyzed: number) {
+  try {
+    const data: CachedAnalysis = { username, blunders, gamesAnalyzed, timestamp: Date.now() };
+    localStorage.setItem(cacheKey(username), JSON.stringify(data));
+    const names: string[] = JSON.parse(localStorage.getItem('chessblinds_usernames') || '[]');
+    if (!names.includes(username.toLowerCase())) {
+      names.push(username.toLowerCase());
+      localStorage.setItem('chessblinds_usernames', JSON.stringify(names));
+    }
+  } catch { /* storage full or unavailable */ }
+}
+
+function loadFromCache(username: string): CachedAnalysis | null {
+  try {
+    const raw = localStorage.getItem(cacheKey(username));
+    if (!raw) return null;
+    const data: CachedAnalysis = JSON.parse(raw);
+    if (Date.now() - data.timestamp > CACHE_EXPIRY_MS) {
+      localStorage.removeItem(cacheKey(username));
+      return null;
+    }
+    return data;
+  } catch { return null; }
+}
+
+function getAllCached(): CachedAnalysis[] {
+  try {
+    const names: string[] = JSON.parse(localStorage.getItem('chessblinds_usernames') || '[]');
+    return names
+      .map(n => loadFromCache(n))
+      .filter((d): d is CachedAnalysis => d !== null)
+      .sort((a, b) => b.timestamp - a.timestamp);
+  } catch { return []; }
+}
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
 
 const TIME_CLASS_LABELS: Record<TimeClass | 'all', string> = {
   all: 'All Games',
@@ -26,16 +84,61 @@ const TIME_CLASS_LABELS: Record<TimeClass | 'all', string> = {
   daily: 'Daily',
 };
 
+const APP_PAGES: Page[] = ['analyze', 'insights', 'practice'];
+
+function getHashPage(): Page | null {
+  const h = window.location.hash.slice(1) as Page;
+  return APP_PAGES.includes(h) ? h : null;
+}
+
 function App() {
-  const [showLanding, setShowLanding] = useState(true);
-  const [currentPage, setCurrentPage] = useState<Page>('analyze');
+  const [showLanding, setShowLanding] = useState<boolean>(() => getHashPage() === null);
+  const [currentPage, setCurrentPage] = useState<Page>(() => getHashPage() ?? 'analyze');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [allBlunders, setAllBlunders] = useState<Blunder[]>([]); // Store ALL blunders
+  const [allBlunders, setAllBlunders] = useState<Blunder[]>([]);
   const [progress, setProgress] = useState('');
   const [gamesAnalyzed, setGamesAnalyzed] = useState(0);
   const [timeClassFilter, setTimeClassFilter] = useState<TimeClass | 'all'>('all');
   const [viewMode, setViewMode] = useState<'overall' | 'byGame'>('overall');
+
+  // Sync hash → state when user hits back/forward
+  useEffect(() => {
+    const onHashChange = () => {
+      const page = getHashPage();
+      if (page) { setShowLanding(false); setCurrentPage(page); }
+      else setShowLanding(true);
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Navigate within app and keep hash in sync
+  const navigateTo = (page: Page) => {
+    setCurrentPage(page);
+    window.location.hash = page;
+  };
+
+  const enterApp = () => {
+    setShowLanding(false);
+    window.location.hash = 'analyze';
+    window.scrollTo(0, 0);
+  };
+
+  const goToLanding = () => {
+    setShowLanding(true);
+    window.location.hash = '';
+    window.scrollTo(0, 0);
+  };
+
+  // Load a previously cached analysis
+  const restoreFromCache = (username: string) => {
+    const cached = loadFromCache(username);
+    if (!cached) return;
+    setAllBlunders(cached.blunders);
+    setGamesAnalyzed(cached.gamesAnalyzed);
+    setProgress(`Loaded saved analysis for "${cached.username}" (${timeAgo(cached.timestamp)})`);
+  };
 
   // Filter blunders based on selected time class
   const filteredBlunders = timeClassFilter === 'all'
@@ -95,6 +198,9 @@ function App() {
       // Store all blunders (filtering happens in render)
       setAllBlunders(allBlunders);
 
+      // Save to cache for future visits
+      saveToCache(username, allBlunders, games.length);
+
       if (allBlunders.length === 0) {
         setProgress('No blunders found! You played well.');
       } else {
@@ -110,7 +216,7 @@ function App() {
   };
 
   if (showLanding) {
-    return <LandingPage onGetStarted={() => { setShowLanding(false); window.scrollTo(0, 0); }} />;
+    return <LandingPage onGetStarted={enterApp} />;
   }
 
   return (
@@ -135,7 +241,7 @@ function App() {
           flexWrap: 'wrap',
         }}>
           <div
-            onClick={() => { setShowLanding(true); window.scrollTo(0, 0); }}
+            onClick={goToLanding}
             style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
             title="Back to home"
           >
@@ -162,7 +268,7 @@ function App() {
               Chess Blindspots
             </h1>
           </div>
-          <Navigation currentPage={currentPage} onNavigate={setCurrentPage} />
+          <Navigation currentPage={currentPage} onNavigate={navigateTo} />
         </div>
       </header>
 
@@ -479,49 +585,16 @@ function App() {
         </>
       )}
 
-      {/* Insights Page - Coming Soon */}
+      {/* Insights Page */}
       {currentPage === 'insights' && (
-        <div style={{
-          backgroundColor: '#1e1c1a',
-          borderRadius: '12px',
-          padding: '60px 40px',
-          textAlign: 'center',
-          border: '1px solid #3d3a37',
-        }}>
-          <div style={{
-            fontSize: '4em',
-            marginBottom: '20px',
-            opacity: 0.6,
-          }}>
-            📊
-          </div>
-          <h2 style={{ margin: '0 0 16px 0', color: '#ffffff', fontSize: '1.8em' }}>
-            Insights Coming Soon
-          </h2>
-          <p style={{ color: '#989795', fontSize: '1.1em', maxWidth: '500px', margin: '0 auto 24px' }}>
-            Deep analysis of your playing patterns, weaknesses by piece type,
-            game phase statistics, and personalized improvement recommendations.
-          </p>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '16px',
-            flexWrap: 'wrap',
-          }}>
-            {['Heatmaps', 'Phase Analysis', 'Piece Patterns', 'Time Pressure'].map((feature) => (
-              <span key={feature} style={{
-                padding: '8px 16px',
-                backgroundColor: '#272522',
-                borderRadius: '20px',
-                fontSize: '0.9em',
-                color: '#81b64c',
-                border: '1px solid #3d3a37',
-              }}>
-                {feature}
-              </span>
-            ))}
-          </div>
-        </div>
+        <InsightsPage
+          blunders={filteredBlunders}
+          gamesAnalyzed={gamesAnalyzed}
+          onGoAnalyze={() => navigateTo('analyze')}
+          onViewWorstBlunder={() => navigateTo('analyze')}
+          cachedAnalyses={getAllCached()}
+          onLoadCache={restoreFromCache}
+        />
       )}
 
       {/* Practice Page - Coming Soon */}
@@ -611,6 +684,11 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
   // Parse game result from PGN
   const resultMatch = game.pgn.match(/\[Result "([^"]+)"\]/);
   const resultStr = resultMatch ? resultMatch[1] : '*';
+
+  // Extract opening name from PGN headers
+  const openingMatch = game.pgn.match(/\[Opening "([^"]+)"\]/);
+  const ecoMatch = game.pgn.match(/\[ECO "([^"]+)"\]/);
+  const opening = openingMatch ? openingMatch[1] : ecoMatch ? ecoMatch[1] : undefined;
   let gameResult: 'win' | 'loss' | 'draw' = 'draw';
   if (resultStr === '1-0') {
     gameResult = playerColor === 'white' ? 'win' : 'loss';
@@ -728,6 +806,7 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
           wasCapture,
           bestMoveWasCapture,
           gamePhase,
+          opening,
         });
       }
 

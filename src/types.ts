@@ -30,6 +30,7 @@ export interface Blunder {
   wasCapture: boolean;
   bestMoveWasCapture: boolean;
   gamePhase: 'opening' | 'middlegame' | 'endgame';
+  opening?: string; // Opening name from PGN headers
 }
 
 export interface AnalysisResult {

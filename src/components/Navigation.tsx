@@ -7,7 +7,7 @@ interface NavigationProps {
 
 const pages = [
   { id: 'analyze' as const, label: 'Analyze' },
-  { id: 'insights' as const, label: 'Insights', comingSoon: true },
+  { id: 'insights' as const, label: 'Insights' },
   { id: 'practice' as const, label: 'Practice', comingSoon: true },
 ];
 
