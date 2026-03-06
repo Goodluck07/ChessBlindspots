@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Chessboard } from 'react-chessboard';
-import type { Blunder } from '../types';
+import React, { useState, useEffect } from "react";
+import { Chessboard } from "react-chessboard";
+import type { Blunder } from "../types";
 
 interface BlunderCardProps {
   blunder: Blunder;
@@ -10,15 +10,25 @@ interface BlunderCardProps {
 // Get piece on a square from FEN
 function getPieceOnSquare(fen: string, square: string): string | null {
   const pieceNames: Record<string, string> = {
-    'k': 'King', 'q': 'Queen', 'r': 'Rook', 'b': 'Bishop', 'n': 'Knight', 'p': 'Pawn',
-    'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn',
+    k: "King",
+    q: "Queen",
+    r: "Rook",
+    b: "Bishop",
+    n: "Knight",
+    p: "Pawn",
+    K: "King",
+    Q: "Queen",
+    R: "Rook",
+    B: "Bishop",
+    N: "Knight",
+    P: "Pawn",
   };
 
-  const file = square.charCodeAt(0) - 'a'.charCodeAt(0); // 0-7
+  const file = square.charCodeAt(0) - "a".charCodeAt(0); // 0-7
   const rank = parseInt(square[1]) - 1; // 0-7
 
-  const boardPart = fen.split(' ')[0];
-  const rows = boardPart.split('/').reverse(); // reverse so rank 1 is index 0
+  const boardPart = fen.split(" ")[0];
+  const rows = boardPart.split("/").reverse(); // reverse so rank 1 is index 0
 
   if (rank < 0 || rank > 7 || file < 0 || file > 7) return null;
 
@@ -38,26 +48,35 @@ function getPieceOnSquare(fen: string, square: string): string | null {
   return null;
 }
 
-function formatMoveWithSquares(san: string, fromSquare: string, toSquare: string, fen: string): string {
-  if (san === 'O-O' || san === '0-0') return 'Castled kingside';
-  if (san === 'O-O-O' || san === '0-0-0') return 'Castled queenside';
+function formatMoveWithSquares(
+  san: string,
+  fromSquare: string,
+  toSquare: string,
+  fen: string,
+): string {
+  if (san === "O-O" || san === "0-0") return "Castled kingside";
+  if (san === "O-O-O" || san === "0-0-0") return "Castled queenside";
 
   const pieces: Record<string, string> = {
-    'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight',
+    K: "King",
+    Q: "Queen",
+    R: "Rook",
+    B: "Bishop",
+    N: "Knight",
   };
 
-  let move = san.replace(/[+#]$/, '');
+  let move = san.replace(/[+#]$/, "");
 
   const promoMatch = move.match(/=([QRBN])$/);
-  let promotion = '';
+  let promotion = "";
   if (promoMatch) {
     promotion = `, promoted to ${pieces[promoMatch[1]]}`;
-    move = move.replace(/=[QRBN]$/, '');
+    move = move.replace(/=[QRBN]$/, "");
   }
 
-  const isCapture = move.includes('x');
+  const isCapture = move.includes("x");
   const pieceChar = move.match(/^[KQRBN]/)?.[0];
-  const piece = pieceChar ? pieces[pieceChar] : 'Pawn';
+  const piece = pieceChar ? pieces[pieceChar] : "Pawn";
 
   if (isCapture) {
     const capturedPiece = getPieceOnSquare(fen, toSquare);
@@ -77,14 +96,30 @@ function formatUciMove(uci: string): string {
 }
 
 // Get severity level based on eval drop
-function getSeverity(evalDrop: number): { label: string; color: string; bgColor: string } {
+function getSeverity(evalDrop: number): {
+  label: string;
+  textClass: string;
+  bgClass: string;
+} {
   const pawns = evalDrop / 100;
   if (pawns >= 6) {
-    return { label: 'Blunder', color: '#ff4444', bgColor: 'rgba(255, 68, 68, 0.15)' };
+    return {
+      label: "Blunder",
+      textClass: "text-red-500",
+      bgClass: "bg-red-100",
+    };
   } else if (pawns >= 4) {
-    return { label: 'Blunder', color: '#fa412d', bgColor: 'rgba(250, 65, 45, 0.15)' };
+    return {
+      label: "Blunder",
+      textClass: "text-red-600",
+      bgClass: "bg-red-100",
+    };
   } else {
-    return { label: 'Mistake', color: '#e6a23c', bgColor: 'rgba(230, 162, 60, 0.15)' };
+    return {
+      label: "Mistake",
+      textClass: "text-yellow-600",
+      bgClass: "bg-yellow-100",
+    };
   }
 }
 
@@ -96,9 +131,14 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
   const getPieceName = (piece: string): string => {
     const names: Record<string, string> = {
-      'K': 'King', 'Q': 'Queen', 'R': 'Rook', 'B': 'Bishop', 'N': 'Knight', 'P': 'Pawn'
+      K: "King",
+      Q: "Queen",
+      R: "Rook",
+      B: "Bishop",
+      N: "Knight",
+      P: "Pawn",
     };
-    return names[piece] || 'piece';
+    return names[piece] || "piece";
   };
 
   const pieceName = getPieceName(blunder.pieceMoved);
@@ -109,7 +149,8 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
     const evalSwing = Math.abs(blunder.evalDrop / 100);
 
     // Get pieces involved in the best move for more specific messages
-    const bestMovePiece = getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) || 'piece';
+    const bestMovePiece =
+      getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) || "piece";
     const targetPiece = getPieceOnSquare(blunder.fen, blunder.bestMoveTo);
 
     if (Math.abs(afterPawns) > 50) {
@@ -122,7 +163,9 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
     if (blunder.wasCapture && evalSwing > 3) {
       const capturedPiece = getPieceOnSquare(blunder.fen, blunder.moveTo);
-      const capturedDesc = capturedPiece ? `the ${capturedPiece}` : 'that piece';
+      const capturedDesc = capturedPiece
+        ? `the ${capturedPiece}`
+        : "that piece";
       return `Your ${pieceName} captured ${capturedDesc} on ${blunder.moveTo}, but it was defended. Your opponent recaptures and wins material. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was safer.`;
     }
 
@@ -134,11 +177,11 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
       return `Your ${pieceName} move to ${blunder.moveTo} allowed your opponent a strong tactical reply. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} avoids this and maintains your position.`;
     }
 
-    if (blunder.gamePhase === 'opening') {
+    if (blunder.gamePhase === "opening") {
       return `Your ${pieceName} move to ${blunder.moveTo} on move ${blunder.moveNumber} wastes time in the opening. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} develops more efficiently or fights for the center.`;
     }
 
-    if (blunder.gamePhase === 'endgame') {
+    if (blunder.gamePhase === "endgame") {
       return `In this endgame, your ${pieceName} on ${blunder.moveTo} is passive. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} is more active and gives your pieces better control.`;
     }
 
@@ -146,7 +189,12 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
   };
 
   const outcomeMessage = getOutcomeMessage();
-  const movePlayedDisplay = formatMoveWithSquares(blunder.movePlayed, blunder.moveFrom, blunder.moveTo, blunder.fen);
+  const movePlayedDisplay = formatMoveWithSquares(
+    blunder.movePlayed,
+    blunder.moveFrom,
+    blunder.moveTo,
+    blunder.fen,
+  );
   const bestMoveDisplay = formatUciMove(blunder.bestMove);
 
   useEffect(() => {
@@ -158,99 +206,69 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
 
   const squareStyles: Record<string, React.CSSProperties> = showBadMove
     ? {
-        [blunder.moveFrom]: { backgroundColor: 'rgba(247, 216, 96, 0.8)' },
-        [blunder.moveTo]: { backgroundColor: 'rgba(247, 216, 96, 0.8)' },
+        [blunder.moveFrom]: { backgroundColor: "rgba(247, 216, 96, 0.8)" },
+        [blunder.moveTo]: { backgroundColor: "rgba(247, 216, 96, 0.8)" },
       }
     : {
-        [blunder.bestMoveFrom]: { backgroundColor: 'rgba(129, 182, 76, 0.85)' },
-        [blunder.bestMoveTo]: { backgroundColor: 'rgba(129, 182, 76, 0.85)' },
+        [blunder.bestMoveFrom]: { backgroundColor: "rgba(129, 182, 76, 0.85)" },
+        [blunder.bestMoveTo]: { backgroundColor: "rgba(129, 182, 76, 0.85)" },
       };
 
   const arrows = showBadMove
-    ? [{ startSquare: blunder.moveFrom, endSquare: blunder.moveTo, color: '#d32f2f' }]
-    : [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: '#5b9a32' }];
+    ? [
+        {
+          startSquare: blunder.moveFrom,
+          endSquare: blunder.moveTo,
+          color: "#d32f2f",
+        },
+      ]
+    : [
+        {
+          startSquare: blunder.bestMoveFrom,
+          endSquare: blunder.bestMoveTo,
+          color: "#5b9a32",
+        },
+      ];
 
   return (
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className="fade-in"
-      style={{
-        border: '1px solid #3d3a37',
-        borderRadius: '8px',
-        padding: compact ? '14px' : '18px',
-        backgroundColor: '#272522',
-        boxShadow: hovered ? '0 8px 24px rgba(0,0,0,0.4)' : '0 2px 8px rgba(0,0,0,0.2)',
-        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-      }}
+      className={`fade-in transition-all duration-200 border border-[#3d3a37] rounded-lg bg-[#272522] \
+        ${hovered ? "shadow-[0_8px_24px_rgba(0,0,0,0.4)] -translate-y-0.5" : "shadow-[0_2px_8px_rgba(0,0,0,0.2)] translate-y-0"} \
+        ${compact ? "p-4" : "p-4.5"}`}
     >
       {/* Header */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        marginBottom: '14px',
-        gap: '8px',
-        flexWrap: 'wrap',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-          <span style={{
-            padding: '4px 10px',
-            backgroundColor: severity.bgColor,
-            color: severity.color,
-            borderRadius: '4px',
-            fontSize: '0.8em',
-            fontWeight: 600,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            whiteSpace: 'nowrap',
-          }}>
+      <div className="flex justify-between items-start mb-3.5 gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          <span
+            className={`px-2 py-1 rounded text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap ${severity.bgClass} ${severity.textClass}`}
+          >
             {severity.label}
-            <span style={{ opacity: 0.8, fontSize: '0.9em' }}>
+            <span className="opacity-80 text-[0.9em]">
               -{(blunder.evalDrop / 100).toFixed(1)}
             </span>
           </span>
-          <span style={{ color: '#bababa', fontWeight: 500, whiteSpace: 'nowrap' }}>
+          <span className="text-[#bababa] font-medium whitespace-nowrap">
             Move {blunder.moveNumber}
           </span>
-          <span style={{
-            padding: '3px 8px',
-            backgroundColor: '#3d3a37',
-            borderRadius: '4px',
-            fontSize: '0.7em',
-            color: '#989795',
-            textTransform: 'capitalize',
-            whiteSpace: 'nowrap',
-          }}>
+          <span className="px-2 py-0.5 bg-[#3d3a37] rounded text-xs text-[#989795] capitalize whitespace-nowrap">
             {blunder.gamePhase}
           </span>
         </div>
         {!compact && (
-          <span style={{
-            color: '#989795',
-            fontSize: '0.85em',
-            maxWidth: '150px',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-            flexShrink: 1,
-          }}>
+          <span className="text-[#989795] text-[0.85em] max-w-37.5 truncate">
             vs {blunder.opponent}
           </span>
         )}
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+      <div className="flex gap-4 flex-wrap">
         {/* Chessboard */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', flexShrink: 0 }}>
-          <div style={{
-            width: compact ? '220px' : '260px',
-            height: compact ? '220px' : '260px',
-            borderRadius: '6px',
-            overflow: 'hidden',
-          }}>
+        <div className="flex flex-col gap-1.5 shrink-0">
+          <div
+            className={`${compact ? "w-55 h-55" : "w-65 h-65"} rounded-md overflow-hidden`}
+          >
             <Chessboard
               options={{
                 position: blunder.fen,
@@ -258,72 +276,54 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
                 allowDragging: false,
                 squareStyles: squareStyles,
                 arrows: arrows,
-                darkSquareStyle: { backgroundColor: '#779556' },
-                lightSquareStyle: { backgroundColor: '#ebecd0' },
+                darkSquareStyle: { backgroundColor: "#779556" },
+                lightSquareStyle: { backgroundColor: "#ebecd0" },
               }}
             />
           </div>
           {/* Move indicator badge - below board */}
-          <div style={{
-            backgroundColor: showBadMove ? 'rgba(250, 65, 45, 0.15)' : 'rgba(129, 182, 76, 0.15)',
-            color: showBadMove ? '#fa412d' : '#81b64c',
-            padding: '5px 10px',
-            borderRadius: '5px',
-            fontSize: '0.75em',
-            fontWeight: 600,
-            textAlign: 'center',
-            border: `1px solid ${showBadMove ? 'rgba(250, 65, 45, 0.3)' : 'rgba(129, 182, 76, 0.3)'}`,
-            transition: 'all 0.3s ease',
-          }}>
-            {showBadMove ? `You: ${blunder.movePlayed}` : `Best: ${blunder.bestMove}`}
+          <div
+            className={`px-2 py-1 rounded text-[0.75em] font-semibold text-center transition-all duration-300 ${
+              showBadMove
+                ? "bg-[rgba(250,65,45,0.15)] text-[#fa412d] border border-[rgba(250,65,45,0.3)]"
+                : "bg-[rgba(129,182,76,0.15)] text-[#81b64c] border border-[rgba(129,182,76,0.3)]"
+            }`}
+          >
+            {showBadMove
+              ? `You: ${blunder.movePlayed}`
+              : `Best: ${blunder.bestMove}`}
           </div>
         </div>
 
         {/* Move details */}
-        <div style={{
-          flex: 1,
-          minWidth: '160px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px',
-        }}>
-          <div style={{
-            backgroundColor: '#1e1c1a',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            borderLeft: '3px solid #fa412d',
-            opacity: showBadMove ? 1 : 0.5,
-            transition: 'opacity 0.3s ease',
-          }}>
-            <span style={{ color: '#989795', fontSize: '0.75em' }}>You played</span>
-            <div style={{ color: '#fa412d', fontWeight: 600, marginTop: '2px', fontSize: '0.9em' }}>
+        <div className="flex-1 min-w-40 flex flex-col gap-2">
+          <div
+            className={`bg-[#1e1c1a] p-2.5 rounded border-l-4 transition-opacity duration-300 ${
+              showBadMove
+                ? "border-l-[#fa412d] opacity-100"
+                : "border-l-[#fa412d] opacity-50"
+            }`}
+          >
+            <span className="text-[#989795] text-[0.75em]">You played</span>
+            <div className="text-[#fa412d] font-semibold mt-0.5 text-[0.9em]">
               {movePlayedDisplay}
             </div>
           </div>
 
-          <div style={{
-            backgroundColor: '#1e1c1a',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            borderLeft: '3px solid #81b64c',
-            opacity: showBadMove ? 0.5 : 1,
-            transition: 'opacity 0.3s ease',
-          }}>
-            <span style={{ color: '#989795', fontSize: '0.75em' }}>Best move</span>
-            <div style={{ color: '#81b64c', fontWeight: 600, marginTop: '2px', fontSize: '0.9em' }}>
+          <div
+            className={`bg-[#1e1c1a] p-2.5 rounded border-l-4 transition-opacity duration-300 ${
+              showBadMove
+                ? "border-l-[#81b64c] opacity-50"
+                : "border-l-[#81b64c] opacity-100"
+            }`}
+          >
+            <span className="text-[#989795] text-[0.75em]">Best move</span>
+            <div className="text-[#81b64c] font-semibold mt-0.5 text-[0.9em]">
               {bestMoveDisplay}
             </div>
           </div>
 
-          <div style={{
-            color: '#bababa',
-            backgroundColor: '#1e1c1a',
-            padding: '10px 12px',
-            borderRadius: '6px',
-            fontSize: '0.8em',
-            lineHeight: 1.5,
-            flex: 1,
-          }}>
+          <div className="text-[#bababa] bg-[#1e1c1a] p-2.5 rounded text-[0.8em] leading-tight flex-1">
             {outcomeMessage}
           </div>
 
@@ -332,11 +332,7 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
               href={blunder.gameUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: '#81b64c',
-                fontSize: '0.8em',
-                textDecoration: 'none',
-              }}
+              className="text-[#81b64c] text-[0.8em] no-underline"
             >
               View full game →
             </a>

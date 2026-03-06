@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from 'react';
+import { useState } from "react";
 
 interface UsernameFormProps {
   onSubmit: (username: string) => void;
@@ -6,11 +6,10 @@ interface UsernameFormProps {
 }
 
 export function UsernameForm({ onSubmit, loading }: UsernameFormProps) {
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
-  const [buttonHovered, setButtonHovered] = useState(false);
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (username.trim() && !loading) {
       onSubmit(username.trim());
@@ -20,50 +19,32 @@ export function UsernameForm({ onSubmit, loading }: UsernameFormProps) {
   const isDisabled = loading || !username.trim();
 
   return (
-    <form onSubmit={handleSubmit} style={{ marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '12px' }}>
+    <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3">
       <input
         type="text"
+        id="username"
+        autoComplete="username"
         value={username}
         onChange={(e) => setUsername(e.target.value)}
         placeholder="Enter chess.com username"
         disabled={loading}
         onFocus={() => setInputFocused(true)}
         onBlur={() => setInputFocused(false)}
-        style={{
-          padding: '12px 16px',
-          fontSize: '16px',
-          backgroundColor: '#1e1c1a',
-          border: `2px solid ${inputFocused ? '#81b64c' : '#3d3a37'}`,
-          borderRadius: '6px',
-          flex: '1 1 200px',
-          minWidth: '0',
-          color: '#bababa',
-          outline: 'none',
-          transition: 'border-color 0.2s ease',
-        }}
+        className={`py-3 px-4 text-base bg-[#1e1c1a] rounded-md flex-1 min-w-0 text-[#bababa] outline-none transition-colors duration-200 border-2 ${
+          inputFocused ? "border-green-400" : "border-[#3d3a37]"
+        }`}
       />
       <button
         type="submit"
         disabled={isDisabled}
-        onMouseEnter={() => setButtonHovered(true)}
-        onMouseLeave={() => setButtonHovered(false)}
-        style={{
-          padding: '12px 24px',
-          fontSize: '16px',
-          fontWeight: 600,
-          backgroundColor: isDisabled
-            ? '#3d3a37'
-            : buttonHovered
-            ? '#9bc968'
-            : '#81b64c',
-          color: isDisabled ? '#989795' : '#ffffff',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: isDisabled ? 'not-allowed' : 'pointer',
-          transition: 'background-color 0.2s ease',
-        }}
+        className={`py-3 px-6 text-base font-semibold rounded-md transition-colors duration-200 
+          ${
+            isDisabled
+              ? "bg-[#3d3a37] text-[#989795] cursor-not-allowed"
+              : "bg-green-600 hover:bg-green-400 text-white cursor-pointer"
+          }`}
       >
-        {loading ? 'Analyzing...' : 'Find Blunders'}
+        {loading ? "Analyzing..." : "Find Blunders"}
       </button>
     </form>
   );

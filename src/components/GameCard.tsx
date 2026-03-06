@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { BlunderCard } from './BlunderCard';
-import type { Blunder } from '../types';
+import { useState } from "react";
+import { BlunderCard } from "./BlunderCard";
+import type { Blunder } from "../types";
 
 interface GameCardProps {
   gameUrl: string;
@@ -9,92 +9,64 @@ interface GameCardProps {
 
 export function GameCard({ gameUrl, blunders }: GameCardProps) {
   const [expanded, setExpanded] = useState(false);
-  const [hovered, setHovered] = useState(false);
   const game = blunders[0];
 
-  const worstDrop = Math.max(...blunders.map(b => b.evalDrop)) / 100;
+  const worstDrop = Math.max(...blunders.map((b) => b.evalDrop)) / 100;
+
+  const resultBg =
+    game.gameResult === "win"
+      ? "bg-green-800 text-green-500"
+      : game.gameResult === "loss"
+        ? "bg-red-800 text-red-500"
+        : "bg-[#3d3a37] text-[#bababa]";
 
   return (
-    <div
-      className="fade-in"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        backgroundColor: '#1e1c1a',
-        borderRadius: '10px',
-        border: '1px solid #3d3a37',
-        overflow: 'hidden',
-        boxShadow: hovered ? '0 6px 20px rgba(0,0,0,0.35)' : '0 2px 8px rgba(0,0,0,0.15)',
-        transform: hovered ? 'translateY(-2px)' : 'translateY(0)',
-        transition: 'box-shadow 0.2s ease, transform 0.2s ease',
-      }}
-    >
+    <div className="fade-in bg-[#1e1c1a] rounded-lg border border-[#3d3a37] overflow-hidden transition-shadow transform duration-200 hover:shadow-xl hover:-translate-y-0.5">
       {/* Clickable Header */}
       <button
         onClick={() => setExpanded(!expanded)}
-        style={{
-          width: '100%',
-          padding: '16px 20px',
-          backgroundColor: 'transparent',
-          border: 'none',
-          cursor: 'pointer',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          gap: '16px',
-        }}
+        className="w-full px-5 py-4 bg-transparent border-none cursor-pointer flex justify-between items-center gap-4"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+        <div className="flex items-center gap-3.5 flex-wrap">
           {/* Opponent */}
-          <span style={{ color: '#e0e0e0', fontSize: '1em', fontWeight: 600 }}>
+          <span className="text-[#e0e0e0] text-base font-semibold">
             vs {game.opponent}
           </span>
 
           {/* Pills */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <span style={{
-              padding: '3px 10px',
-              backgroundColor: '#3d3a37',
-              borderRadius: '12px',
-              fontSize: '0.75em',
-              color: '#bababa',
-              textTransform: 'capitalize',
-            }}>
+          <div className="flex gap-2">
+            <span className="px-2 py-1 bg-[#3d3a37] rounded-full text-[0.75em] text-[#bababa] capitalize">
               {game.timeClass}
             </span>
-            <span style={{
-              padding: '3px 10px',
-              backgroundColor: game.gameResult === 'win' ? '#2d3a29' :
-                               game.gameResult === 'loss' ? '#3d2522' : '#3d3a37',
-              borderRadius: '12px',
-              fontSize: '0.75em',
-              color: game.gameResult === 'win' ? '#81b64c' :
-                     game.gameResult === 'loss' ? '#fa412d' : '#bababa',
-            }}>
-              {game.gameResult === 'win' ? 'Won' :
-               game.gameResult === 'loss' ? 'Lost' : 'Draw'}
+            <span
+              className={`px-2 py-1 rounded-full text-[0.75em] ${resultBg}`}
+            >
+              {game.gameResult === "win"
+                ? "Won"
+                : game.gameResult === "loss"
+                  ? "Lost"
+                  : "Draw"}
             </span>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div className="flex items-center gap-4">
           {/* Stats */}
-          <div style={{ textAlign: 'right' }}>
-            <div style={{ color: '#fa412d', fontSize: '0.9em', fontWeight: 600 }}>
-              {blunders.length} blunder{blunders.length > 1 ? 's' : ''}
+          <div className="text-right">
+            <div className="text-red-500 text-[0.9em] font-semibold">
+              {blunders.length} blunder{blunders.length > 1 ? "s" : ""}
             </div>
-            <div style={{ color: '#989795', fontSize: '0.75em' }}>
+            <div className="text-[#989795] text-[0.75em]">
               worst: -{worstDrop.toFixed(1)}
             </div>
           </div>
 
           {/* Chevron */}
-          <span style={{
-            color: '#989795',
-            fontSize: '1.2em',
-            transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
-            transition: 'transform 0.2s ease',
-          }}>
+          <span
+            className={`text-[#989795] text-xl transition-transform duration-200 ${
+              expanded ? "rotate-180" : "rotate-0"
+            }`}
+          >
             ▼
           </span>
         </div>
@@ -102,31 +74,21 @@ export function GameCard({ gameUrl, blunders }: GameCardProps) {
 
       {/* Expanded Content */}
       {expanded && (
-        <div style={{
-          padding: '0 20px 20px',
-          borderTop: '1px solid #3d3a37',
-        }}>
+        <div className="px-5 pb-5 border-t border-[#3d3a37]">
           {/* View Game Link */}
-          <div style={{
-            padding: '12px 0',
-            marginBottom: '12px',
-          }}>
+          <div className="py-3 mb-3">
             <a
               href={gameUrl}
               target="_blank"
               rel="noopener noreferrer"
-              style={{
-                color: '#81b64c',
-                fontSize: '0.85em',
-                textDecoration: 'none',
-              }}
+              className="text-green-600 text-[0.85em] hover:underline"
             >
               View full game on chess.com →
             </a>
           </div>
 
           {/* Blunders */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="flex flex-col gap-3">
             {blunders.map((blunder) => (
               <BlunderCard
                 key={`${blunder.gameUrl}-${blunder.moveNumber}`}

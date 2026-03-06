@@ -1,4 +1,4 @@
-import { DemoBlunder } from './DemoBlunder';
+import { DemoBlunder } from "./DemoBlunder";
 
 interface LandingPageProps {
   onGetStarted: () => void;
@@ -6,67 +6,37 @@ interface LandingPageProps {
 
 export function LandingPage({ onGetStarted }: LandingPageProps) {
   return (
-    <div style={{ fontFamily: "'Segoe UI', system-ui, sans-serif", color: '#bababa' }}>
-
+    <div className="font-sans text-[#bababa]">
       {/* ─── HEADER ─── */}
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: 'rgba(39, 37, 34, 0.96)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #3d3a37',
-        padding: '14px 24px',
-      }}>
-        <div style={{
-          maxWidth: '960px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}>
+      <header className="sticky top-0 z-50 bg-[rgba(39,37,34,0.96)] backdrop-blur-md border-b border-[#3d3a37] py-3 px-6">
+        <div className="max-w-240 mx-auto flex items-center justify-between">
           {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(135deg, #81b64c 0%, #6a9a3d 100%)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              boxShadow: '0 2px 8px rgba(129,182,76,0.3)',
-            }}>&#9816;</div>
-            <span style={{ fontWeight: 700, fontSize: '1.2em', color: '#fff' }}>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-green-400 to-green-700 flex items-center justify-center text-lg shadow-md">
+              &#9816;
+            </div>
+            <span className="font-bold text-xl text-white">
               Chess Blindspots
             </span>
           </div>
 
           {/* Nav */}
-          <nav style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-            <a href="#how-it-works" className="landing-nav-link" style={{ color: '#989795', fontSize: '0.9em', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#989795')}>
+          <nav className="flex items-center gap-6">
+            <a
+              href="#how-it-works"
+              className="landing-nav-link text-[#989795] text-sm hover:text-white transition-colors"
+            >
               How It Works
             </a>
-            <a href="#features" className="landing-nav-link" style={{ color: '#989795', fontSize: '0.9em', textDecoration: 'none' }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#fff')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#989795')}>
+            <a
+              href="#features"
+              className="landing-nav-link text-[#989795] text-sm hover:text-white transition-colors"
+            >
               Features
             </a>
             <button
               onClick={onGetStarted}
-              style={{
-                backgroundColor: '#81b64c',
-                color: '#1a1a1a',
-                border: 'none',
-                borderRadius: '8px',
-                padding: '8px 18px',
-                fontWeight: 700,
-                fontSize: '0.9em',
-                cursor: 'pointer',
-              }}
+              className="bg-green-600 text-black rounded-lg py-2 px-4 font-bold text-sm hover:bg-green-500 transition-colors cursor-pointer"
             >
               Try It Free
             </button>
@@ -75,177 +45,96 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </header>
 
       {/* ─── HERO ─── */}
-      <section style={{
-        padding: '100px 24px 80px',
-        textAlign: 'center',
-        background: 'linear-gradient(180deg, rgba(129,182,76,0.06) 0%, transparent 100%)',
-        borderBottom: '1px solid #3d3a37',
-      }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <div style={{
-            display: 'inline-block',
-            backgroundColor: 'rgba(129,182,76,0.12)',
-            color: '#81b64c',
-            border: '1px solid rgba(129,182,76,0.3)',
-            borderRadius: '20px',
-            padding: '6px 16px',
-            fontSize: '0.82em',
-            fontWeight: 600,
-            letterSpacing: '0.5px',
-            marginBottom: '28px',
-            textTransform: 'uppercase',
-          }}>
+      <section className="py-25 px-6 pb-20 text-center bg-linear-to-b from-[rgba(129,182,76,0.06)] to-transparent border-b border-[#3d3a37]">
+        <div className="max-w-2xl mx-auto">
+          <div className="inline-block bg-[rgba(129,182,76,0.12)] text-green-600 border border-[rgba(129,182,76,0.3)] rounded-full px-4 py-1 text-[0.82em] font-semibold tracking-wide uppercase mb-7">
             Powered by Stockfish
           </div>
 
-          <h1 style={{
-            fontSize: 'clamp(2em, 5vw, 3.4em)',
-            fontWeight: 800,
-            color: '#ffffff',
-            lineHeight: 1.15,
-            margin: '0 0 24px',
-            letterSpacing: '-0.5px',
-          }}>
-            Stop Repeating the{' '}
-            <span style={{ color: '#81b64c' }}>Same Mistakes</span>
+          <h1 className="text-white font-extrabold leading-tight mb-6 text-[clamp(2em,5vw,3.4em)] tracking-[-0.5px]">
+            Stop Repeating the{" "}
+            <span className="text-green-600">Same Mistakes</span>
           </h1>
 
-          <p style={{
-            fontSize: '1.15em',
-            color: '#989795',
-            lineHeight: 1.7,
-            margin: '0 0 40px',
-            maxWidth: '560px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-          }}>
-            Chess Blindspots analyzes your recent games, finds your worst blunders,
-            and shows you exactly what you should have played instead.
+          <p className="text-[#989795] text-lg leading-relaxed mb-10 max-w-140 mx-auto">
+            Chess Blindspots analyzes your recent games, finds your worst
+            blunders, and shows you exactly what you should have played instead.
           </p>
 
-          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
+          <div className="flex gap-3.5 justify-center flex-wrap">
             <button
               onClick={onGetStarted}
-              style={{
-                backgroundColor: '#81b64c',
-                color: '#1a1a1a',
-                border: 'none',
-                borderRadius: '10px',
-                padding: '14px 32px',
-                fontWeight: 700,
-                fontSize: '1.05em',
-                cursor: 'pointer',
-                boxShadow: '0 4px 16px rgba(129,182,76,0.35)',
-                transition: 'transform 0.15s ease, box-shadow 0.15s ease',
-              }}
-              onMouseEnter={e => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 6px 20px rgba(129,182,76,0.45)';
-              }}
-              onMouseLeave={e => {
-                (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)';
-                (e.currentTarget as HTMLButtonElement).style.boxShadow = '0 4px 16px rgba(129,182,76,0.35)';
-              }}
+              className="bg-green-600 text-black rounded-md py-3 px-8 font-bold text-lg shadow-lg transform transition-transform duration-150 hover:-translate-y-0.5 hover:shadow-xl cursor-pointer"
             >
               Analyze My Games
             </button>
             <a
               href="#how-it-works"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px',
-                backgroundColor: 'transparent',
-                color: '#bababa',
-                border: '1px solid #3d3a37',
-                borderRadius: '10px',
-                padding: '14px 28px',
-                fontWeight: 500,
-                fontSize: '1.05em',
-                textDecoration: 'none',
-                transition: 'border-color 0.15s ease',
-              }}
-              onMouseEnter={e => (e.currentTarget.style.borderColor = '#81b64c')}
-              onMouseLeave={e => (e.currentTarget.style.borderColor = '#3d3a37')}
+              className="inline-flex items-center gap-1.5 text-[#bababa] border border-[#3d3a37] rounded-md py-3 px-7 font-medium text-lg hover:border-green-600 transition-colors"
             >
               See How It Works
             </a>
           </div>
 
-          <p style={{ marginTop: '20px', fontSize: '0.82em', color: '#5a5856' }}>
+          <p className="mt-5 text-[0.82em] text-[#5a5856]">
             Free · No account needed · Works with chess.com
           </p>
         </div>
       </section>
 
       {/* ─── SECTION 1: HOW IT WORKS ─── */}
-      <section id="how-it-works" style={{
-        padding: '80px 24px',
-        borderBottom: '1px solid #3d3a37',
-      }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '56px' }}>
-            <h2 style={{ fontSize: '2em', fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>
-              How It Works
-            </h2>
-            <p style={{ color: '#989795', fontSize: '1.05em', margin: 0 }}>
+      <section
+        id="how-it-works"
+        className="py-20 px-6 border-b border-[#3d3a37]"
+      >
+        <div className="max-w-240 mx-auto">
+          <div className="text-center mb-14">
+            <h2 className="text-2xl font-bold text-white mb-3">How It Works</h2>
+            <p className="text-[#989795] text-lg mb-0">
               Three steps to finding your blindspots
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-            gap: '24px',
-          }}>
+          <div className="grid gap-6 grid-cols-[repeat(auto-fit,minmax(240px,1fr))]">
             {[
               {
-                step: '01',
-                icon: '♟',
-                title: 'Enter Your Username',
-                description: 'Type in your Chess.com username. No login or API key required.',
+                step: "01",
+                icon: "♟",
+                title: "Enter Your Username",
+                description:
+                  "Type in your Chess.com username. No login or API key required.",
               },
               {
-                step: '02',
-                icon: '⚙',
-                title: 'We Analyze Your Games',
-                description: 'Stockfish evaluates your last 10 games move-by-move, flagging any moment where you dropped 2+ pawns of evaluation.',
+                step: "02",
+                icon: "⚙",
+                title: "We Analyze Your Games",
+                description:
+                  "Stockfish evaluates your last 10 games move-by-move, flagging any moment where you dropped 2+ pawns of evaluation.",
               },
               {
-                step: '03',
-                icon: '♛',
-                title: 'See Your Worst Blunders',
-                description: 'Your top mistakes appear as interactive boards showing what you played vs. what you should have played.',
+                step: "03",
+                icon: "♛",
+                title: "See Your Worst Blunders",
+                description:
+                  "Your top mistakes appear as interactive boards showing what you played vs. what you should have played.",
               },
             ].map(({ step, icon, title, description }) => (
-              <div key={step} style={{
-                backgroundColor: '#1e1c1a',
-                border: '1px solid #3d3a37',
-                borderRadius: '12px',
-                padding: '28px 24px',
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                  <div style={{
-                    width: '44px',
-                    height: '44px',
-                    borderRadius: '10px',
-                    backgroundColor: 'rgba(129,182,76,0.12)',
-                    border: '1px solid rgba(129,182,76,0.25)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '22px',
-                  }}>
+              <div
+                key={step}
+                className="bg-[#1e1c1a] border border-[#3d3a37] rounded-xl px-6 py-7"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-11 h-11 rounded-[10px] bg-[rgba(129,182,76,0.12)] border border-[rgba(129,182,76,0.25)] flex items-center justify-center text-[22px]">
                     {icon}
                   </div>
-                  <span style={{ color: '#5a5856', fontSize: '0.75em', fontWeight: 700, letterSpacing: '1px' }}>
+                  <span className="text-[#5a5856] text-[0.75em] font-bold tracking-[1px]">
                     STEP {step}
                   </span>
                 </div>
-                <h3 style={{ color: '#fff', fontWeight: 600, fontSize: '1.1em', margin: '0 0 10px' }}>
+                <h3 className="text-white font-semibold text-[1.1em] mb-2.5">
                   {title}
                 </h3>
-                <p style={{ color: '#989795', fontSize: '0.95em', lineHeight: 1.6, margin: 0 }}>
+                <p className="text-[#989795] text-[0.95em] leading-relaxed m-0">
                   {description}
                 </p>
               </div>
@@ -255,18 +144,18 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* ─── SECTION 2: SEE IT IN ACTION ─── */}
-      <section id="features" style={{
-        padding: '80px 24px',
-        borderBottom: '1px solid #3d3a37',
-        backgroundColor: 'rgba(0,0,0,0.15)',
-      }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '2em', fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>
+      <section
+        id="features"
+        className="py-20 px-6 border-b border-[#3d3a37] bg-[rgba(0,0,0,0.15)]"
+      >
+        <div className="max-w-240 mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-white mb-3">
               See It In Action
             </h2>
-            <p style={{ color: '#989795', fontSize: '1.05em', margin: 0 }}>
-              An interactive example — toggle between the mistake and the best move
+            <p className="text-[#989795] text-[1.05em] m-0">
+              An interactive example — toggle between the mistake and the best
+              move
             </p>
           </div>
           <DemoBlunder />
@@ -274,66 +163,47 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* ─── SECTION 3: WHO IT'S FOR ─── */}
-      <section style={{ padding: '80px 24px', borderBottom: '1px solid #3d3a37' }}>
-        <div style={{ maxWidth: '960px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '48px' }}>
-            <h2 style={{ fontSize: '2em', fontWeight: 700, color: '#fff', margin: '0 0 12px' }}>
+      <section className="py-20 px-6 border-b border-[#3d3a37]">
+        <div className="max-w-240 mx-auto">
+          <div className="text-center mb-12">
+            <h2 className="text-2xl font-bold text-white mb-3">
               Built for Players Who Want to Improve
             </h2>
-            <p style={{ color: '#989795', fontSize: '1.05em', margin: 0, maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
-              Whether you're a casual weekend player or grinding to hit your next rating milestone.
+            <p className="text-[#989795] text-[1.05em] m-0 max-w-125 mx-auto">
+              Whether you're a casual weekend player or grinding to hit your
+              next rating milestone.
             </p>
           </div>
 
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-            gap: '20px',
-          }}>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-5">
             {[
               {
-                quote: '"I kept hanging the same piece in the endgame and had no idea. This showed me the pattern immediately."',
-                label: 'Club Player, 1100 Elo',
+                quote:
+                  '"I kept hanging the same piece in the endgame and had no idea. This showed me the pattern immediately."',
+                label: "Club Player, 1100 Elo",
               },
               {
-                quote: '"Filter by blitz games only? Yes please. My rapid blunders are totally different from my bullet mistakes."',
-                label: 'Blitz Enthusiast, 1450 Elo',
+                quote:
+                  '"Filter by blitz games only? Yes please. My rapid blunders are totally different from my bullet mistakes."',
+                label: "Blitz Enthusiast, 1450 Elo",
               },
               {
-                quote: '"Free, no sign-up, just paste your username and go. Exactly what I needed."',
-                label: 'Casual Player',
+                quote:
+                  '"Free, no sign-up, just paste your username and go. Exactly what I needed."',
+                label: "Casual Player",
               },
             ].map(({ quote, label }) => (
-              <div key={label} style={{
-                backgroundColor: '#1e1c1a',
-                border: '1px solid #3d3a37',
-                borderRadius: '12px',
-                padding: '24px',
-              }}>
-                <div style={{
-                  fontSize: '1.5em',
-                  color: '#81b64c',
-                  marginBottom: '12px',
-                  lineHeight: 1,
-                }}>
+              <div
+                key={label}
+                className="bg-[#1e1c1a] border border-[#3d3a37] rounded-lg p-6"
+              >
+                <div className="text-2xl text-green-600 mb-3 leading-none">
                   "
                 </div>
-                <p style={{
-                  color: '#bababa',
-                  fontSize: '0.95em',
-                  lineHeight: 1.65,
-                  margin: '0 0 16px',
-                  fontStyle: 'italic',
-                }}>
+                <p className="text-[#bababa] text-sm italic leading-relaxed mb-4">
                   {quote.slice(1, -1)}
                 </p>
-                <span style={{
-                  fontSize: '0.78em',
-                  color: '#5a5856',
-                  fontWeight: 600,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
+                <span className="text-[0.78em] text-[#5a5856] font-semibold uppercase tracking-wider">
                   — {label}
                 </span>
               </div>
@@ -343,34 +213,18 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* ─── FOOTER CTA ─── */}
-      <section style={{
-        padding: '80px 24px',
-        textAlign: 'center',
-        background: 'linear-gradient(180deg, transparent 0%, rgba(129,182,76,0.05) 100%)',
-      }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ fontSize: '2em', fontWeight: 700, color: '#fff', margin: '0 0 16px' }}>
+      <section className="py-20 px-6 text-center bg-linear-to-b from-transparent to-[rgba(129,182,76,0.05)]">
+        <div className="max-w-xl mx-auto">
+          <h2 className="text-2xl font-bold text-white mb-4">
             Ready to Find Your Blindspots?
           </h2>
-          <p style={{ color: '#989795', fontSize: '1.05em', margin: '0 0 36px' }}>
-            It takes 30 seconds. Enter your username and see exactly where your games fall apart.
+          <p className="text-[#989795] text-lg mb-9">
+            It takes 30 seconds. Enter your username and see exactly where your
+            games fall apart.
           </p>
           <button
             onClick={onGetStarted}
-            style={{
-              backgroundColor: '#81b64c',
-              color: '#1a1a1a',
-              border: 'none',
-              borderRadius: '10px',
-              padding: '16px 40px',
-              fontWeight: 700,
-              fontSize: '1.1em',
-              cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(129,182,76,0.4)',
-              transition: 'transform 0.15s ease',
-            }}
-            onMouseEnter={e => (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-2px)'}
-            onMouseLeave={e => (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(0)'}
+            className="bg-green-600 text-black rounded-lg py-4 px-10 font-bold text-xl shadow-lg transition-transform duration-150 hover:-translate-y-0.5 cursor-pointer"
           >
             Analyze My Games — It's Free
           </button>
@@ -378,29 +232,18 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
       </section>
 
       {/* ─── FOOTER ─── */}
-      <footer style={{
-        textAlign: 'center',
-        padding: '24px 20px',
-        borderTop: '1px solid #3d3a37',
-        color: '#5a5856',
-        fontSize: '0.85em',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: '16px',
-        flexWrap: 'wrap',
-      }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#fff', fontWeight: 600 }}>
+      <footer className="text-center py-6 border-t border-[#3d3a37] text-[#5a5856] text-[0.85em] flex items-center justify-center gap-4 flex-wrap">
+        <span className="flex items-center gap-1 text-white font-semibold">
           &#9816; Chess Blindspots
         </span>
-        <span style={{ color: '#3d3a37' }}>|</span>
+        <span className="text-[#3d3a37]">|</span>
         <span>Built with Stockfish + React</span>
-        <span style={{ color: '#3d3a37' }}>|</span>
+        <span className="text-[#3d3a37]">|</span>
         <a
           href="https://github.com/Goodluck07/ChessBlindspots"
           target="_blank"
           rel="noopener noreferrer"
-          style={{ color: '#81b64c', textDecoration: 'none' }}
+          className="text-green-600 hover:underline"
         >
           View on GitHub
         </a>
