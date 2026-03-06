@@ -290,9 +290,12 @@ async function analyzeGame(
   if (openingMatch) {
     opening = openingMatch[1];
   } else if (ecoUrlMatch) {
-    // e.g. https://www.chess.com/openings/Nimzowitsch-Larsen-Attack-English-Variation
+    // e.g. https://www.chess.com/openings/Nimzowitsch-Larsen-Attack-Classical-Variation-2.Bb2-Nf6
+    // Take first 3 words → "Nimzowitsch Larsen Attack", "Italian Game", "French Defense", etc.
     const slug = ecoUrlMatch[1].split("/").pop() ?? "";
-    if (slug) opening = slug.replace(/-/g, " ");
+    if (slug) {
+      opening = slug.replace(/-/g, " ").split(" ").slice(0, 3).join(" ");
+    }
   } else if (ecoMatch) {
     opening = ecoMatch[1]; // fallback: bare ECO code like "A01"
   }

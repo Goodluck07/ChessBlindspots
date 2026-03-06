@@ -1,22 +1,10 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import type { Blunder } from "../../../types";
+import { BlunderCard } from "../../analyze/components/BlunderCard";
 import { Section } from "./Section";
 
 interface WorstBlunderSectionProps {
-  worstBlunder: {
-    movePlayed: string;
-    bestMove: string;
-    bestMoveFrom: string;
-    bestMoveTo: string;
-    moveNumber: number;
-    gamePhase: string;
-    opening?: string;
-    opponent: string;
-    gameResult: "win" | "loss" | "draw";
-    pieceMoved: string;
-    wasCapture: boolean;
-    bestMoveWasCapture: boolean;
-    evalDrop: number;
-  };
+  worstBlunder: Blunder;
   worstDrop: number;
 }
 
@@ -28,6 +16,8 @@ export function WorstBlunderSection({
   worstBlunder,
   worstDrop,
 }: WorstBlunderSectionProps) {
+  const [showBoard, setShowBoard] = useState(false);
+
   const {
     movePlayed,
     bestMoveFrom,
@@ -96,13 +86,15 @@ export function WorstBlunderSection({
           </p>
         </div>
 
-        <Link
-          to="/analyze"
-          className="bg-[rgba(129,182,76,0.15)] text-[#81b64c] border border-[rgba(129,182,76,0.3)] rounded-lg px-5 py-2.5 text-sm font-semibold no-underline whitespace-nowrap"
+        <button
+          onClick={() => setShowBoard((v) => !v)}
+          className="bg-[rgba(129,182,76,0.15)] text-[#81b64c] border border-[rgba(129,182,76,0.3)] rounded-lg px-5 py-2.5 text-sm font-semibold cursor-pointer whitespace-nowrap"
         >
-          View on Board →
-        </Link>
+          {showBoard ? "Hide Board ↑" : "View on Board →"}
+        </button>
       </div>
+
+      {showBoard && <BlunderCard blunder={worstBlunder} />}
     </Section>
   );
 }
