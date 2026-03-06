@@ -22,7 +22,7 @@ export function BlunderStatsSection({
   pieceNames,
 }: BlunderStatsSectionProps) {
   return (
-    <section className="grid grid-cols-[repeat(auto-fit,minmax(140px,1fr))] gap-3">
+    <section className="grid grid-cols-[repeat(auto-fit,minmax(155px,1fr))] gap-3">
       <StatCard label="Total Blunders" value={String(total)} color="#fa412d" />
       <StatCard
         label="Per Game"

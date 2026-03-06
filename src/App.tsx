@@ -284,12 +284,18 @@ async function analyzeGame(
 
   // Extract opening name from PGN headers
   const openingMatch = game.pgn.match(/\[Opening "([^"]+)"\]/);
+  const ecoUrlMatch = game.pgn.match(/\[ECOUrl "([^"]+)"\]/);
   const ecoMatch = game.pgn.match(/\[ECO "([^"]+)"\]/);
-  const opening = openingMatch
-    ? openingMatch[1]
-    : ecoMatch
-      ? ecoMatch[1]
-      : undefined;
+  let opening: string | undefined;
+  if (openingMatch) {
+    opening = openingMatch[1];
+  } else if (ecoUrlMatch) {
+    // e.g. https://www.chess.com/openings/Nimzowitsch-Larsen-Attack-English-Variation
+    const slug = ecoUrlMatch[1].split("/").pop() ?? "";
+    if (slug) opening = slug.replace(/-/g, " ");
+  } else if (ecoMatch) {
+    opening = ecoMatch[1]; // fallback: bare ECO code like "A01"
+  }
   let gameResult: "win" | "loss" | "draw" = "draw";
   if (resultStr === "1-0") {
     gameResult = playerColor === "white" ? "win" : "loss";
