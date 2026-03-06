@@ -291,10 +291,19 @@ async function analyzeGame(
     opening = openingMatch[1];
   } else if (ecoUrlMatch) {
     // e.g. https://www.chess.com/openings/Nimzowitsch-Larsen-Attack-Classical-Variation-2.Bb2-Nf6
-    // Take first 3 words → "Nimzowitsch Larsen Attack", "Italian Game", "French Defense", etc.
     const slug = ecoUrlMatch[1].split("/").pop() ?? "";
     if (slug) {
-      opening = slug.replace(/-/g, " ").split(" ").slice(0, 3).join(" ");
+      const words = slug.split("-");
+      // Stop before "with", "without", "vs", or any word starting with a digit (move notations like "3...Bf5")
+      const stopWords = new Set(["with", "without", "vs"]);
+      let cutoff = Math.min(words.length, 3);
+      for (let i = 0; i < Math.min(words.length, 4); i++) {
+        if (stopWords.has(words[i].toLowerCase()) || /^\d/.test(words[i])) {
+          cutoff = i;
+          break;
+        }
+      }
+      opening = words.slice(0, Math.max(cutoff, 2)).join(" ");
     }
   } else if (ecoMatch) {
     opening = ecoMatch[1]; // fallback: bare ECO code like "A01"

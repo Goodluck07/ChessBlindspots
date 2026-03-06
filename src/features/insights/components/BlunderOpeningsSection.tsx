@@ -24,6 +24,7 @@ export function BlunderOpeningsSection({
               sublabel={
                 count === topOpenings[0][1] ? "← most blunders" : undefined
               }
+              href={`https://www.chess.com/openings/${name.trim().replace(/\s+/g, "-")}`}
             />
           ))}
           <p className="mt-4 text-[#989795] text-[0.82em] leading-relaxed">
