@@ -13,10 +13,13 @@ export function AnalyzePage({
   error,
   progress,
   gamesAnalyzed,
+  gamesToAnalyze,
+  lastAnalyzedUsername,
   timeClassFilter,
   viewMode,
   TIME_CLASS_LABELS,
   onAnalyzeGames,
+  onSetGamesToAnalyze,
   onSetTimeClassFilter,
   onSetViewMode,
 }: AnalyzeViewProps) {
@@ -31,10 +34,13 @@ export function AnalyzePage({
         error={error}
         progress={progress}
         gamesAnalyzed={gamesAnalyzed}
+        gamesToAnalyze={gamesToAnalyze}
+        lastAnalyzedUsername={lastAnalyzedUsername}
         timeClassFilter={timeClassFilter}
         viewMode={viewMode}
         TIME_CLASS_LABELS={TIME_CLASS_LABELS}
         onAnalyzeGames={onAnalyzeGames}
+        onSetGamesToAnalyze={onSetGamesToAnalyze}
         onSetTimeClassFilter={onSetTimeClassFilter}
         onSetViewMode={onSetViewMode}
       />

@@ -15,10 +15,13 @@ export interface AnalyzeViewProps {
   error: string | null;
   progress: string | null;
   gamesAnalyzed: number;
+  gamesToAnalyze: number;
+  lastAnalyzedUsername: string;
   timeClassFilter: TimeClass | "all";
   viewMode: "overall" | "byGame";
   TIME_CLASS_LABELS: Record<TimeClass | "all", string>;
   onAnalyzeGames: (username: string) => void;
+  onSetGamesToAnalyze: (n: number) => void;
   onSetTimeClassFilter: (tc: TimeClass | "all") => void;
   onSetViewMode: (mode: "overall" | "byGame") => void;
 }
@@ -32,10 +35,13 @@ export function AnalyzeView({
   error,
   progress,
   gamesAnalyzed,
+  gamesToAnalyze,
+  lastAnalyzedUsername,
   timeClassFilter,
   viewMode,
   TIME_CLASS_LABELS,
   onAnalyzeGames,
+  onSetGamesToAnalyze,
   onSetTimeClassFilter,
   onSetViewMode,
 }: AnalyzeViewProps) {
@@ -48,6 +54,9 @@ export function AnalyzeView({
         timeClassFilter={timeClassFilter}
         TIME_CLASS_LABELS={TIME_CLASS_LABELS}
         onSetTimeClassFilter={onSetTimeClassFilter}
+        gamesToAnalyze={gamesToAnalyze}
+        onSetGamesToAnalyze={onSetGamesToAnalyze}
+        lastAnalyzedUsername={lastAnalyzedUsername}
       />
 
       {/* Error Message */}
@@ -58,6 +67,7 @@ export function AnalyzeView({
         progress={progress}
         loading={loading}
         gamesAnalyzed={gamesAnalyzed}
+        gamesTotal={gamesToAnalyze}
       />
 
       {/* Demo Section */}

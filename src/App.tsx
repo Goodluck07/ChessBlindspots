@@ -1,5 +1,11 @@
-import { useState } from "react";
-import { Routes, Route } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Routes, Route, useLocation } from "react-router-dom";
+
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
 import { Chess } from "chess.js";
 import { LandingPage } from "./pages/Landing";
 import { AnalyzePage } from "./pages/Analyze";
@@ -12,7 +18,6 @@ import type { Blunder, ChessGame, TimeClass } from "./types";
 
 const BLUNDER_THRESHOLD = 200; // centipawns (2 pawns)
 const MAX_BLUNDERS_TO_SHOW = 5;
-const GAMES_TO_ANALYZE = 10;
 const ANALYSIS_DEPTH = 12;
 const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
 
@@ -97,6 +102,8 @@ function App() {
   const [allBlunders, setAllBlunders] = useState<Blunder[]>([]);
   const [progress, setProgress] = useState("");
   const [gamesAnalyzed, setGamesAnalyzed] = useState(0);
+  const [gamesToAnalyze, setGamesToAnalyze] = useState(10);
+  const [lastAnalyzedUsername, setLastAnalyzedUsername] = useState("");
   const [timeClassFilter, setTimeClassFilter] = useState<TimeClass | "all">(
     "all",
   );
@@ -148,15 +155,16 @@ function App() {
     setAllBlunders([]);
     setProgress("Fetching games...");
     setGamesAnalyzed(0);
+    setLastAnalyzedUsername(username);
 
     try {
-      const allGames = await fetchRecentGames(username, GAMES_TO_ANALYZE * 2); // Fetch more to have enough after filtering
+      const allGames = await fetchRecentGames(username, gamesToAnalyze * 2); // Fetch more to have enough after filtering
       const games =
         timeClassFilter === "all"
-          ? allGames.slice(0, GAMES_TO_ANALYZE)
+          ? allGames.slice(0, gamesToAnalyze)
           : allGames
               .filter((g) => g.timeClass === timeClassFilter)
-              .slice(0, GAMES_TO_ANALYZE);
+              .slice(0, gamesToAnalyze);
 
       if (games.length === 0) {
         setError(
@@ -210,6 +218,8 @@ function App() {
   };
 
   return (
+    <>
+    <ScrollToTop />
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route
@@ -224,10 +234,13 @@ function App() {
             error={error}
             progress={progress}
             gamesAnalyzed={gamesAnalyzed}
+            gamesToAnalyze={gamesToAnalyze}
+            lastAnalyzedUsername={lastAnalyzedUsername}
             timeClassFilter={timeClassFilter}
             viewMode={viewMode}
             TIME_CLASS_LABELS={TIME_CLASS_LABELS}
             onAnalyzeGames={analyzeGames}
+            onSetGamesToAnalyze={setGamesToAnalyze}
             onSetTimeClassFilter={setTimeClassFilter}
             onSetViewMode={setViewMode}
           />
@@ -247,6 +260,7 @@ function App() {
       <Route path="/practice" element={<PracticePage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   );
 }
 
@@ -295,6 +309,8 @@ async function analyzeGame(
 
   // Reset to starting position
   chess.reset();
+
+  const totalPlayerMoves = Math.ceil(moves.length / 2);
 
   let prevEval = 0;
   let moveNumber = 0;
@@ -396,6 +412,7 @@ async function analyzeGame(
           bestMoveWasCapture,
           gamePhase,
           opening,
+          totalPlayerMoves,
         });
       }
 

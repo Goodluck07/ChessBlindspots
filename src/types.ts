@@ -31,6 +31,7 @@ export interface Blunder {
   bestMoveWasCapture: boolean;
   gamePhase: 'opening' | 'middlegame' | 'endgame';
   opening?: string; // Opening name from PGN headers
+  totalPlayerMoves?: number; // Total moves the player made in this game
 }
 
 export interface AnalysisResult {

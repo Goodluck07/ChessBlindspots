@@ -13,6 +13,20 @@ export function GameCard({ gameUrl, blunders }: GameCardProps) {
 
   const worstDrop = Math.max(...blunders.map((b) => b.evalDrop)) / 100;
 
+  const totalPlayerMoves = game.totalPlayerMoves ?? 0;
+  const accuracy =
+    totalPlayerMoves > 0
+      ? Math.max(0, Math.round((1 - blunders.length / totalPlayerMoves) * 100))
+      : null;
+  const accuracyColor =
+    accuracy === null
+      ? "text-[#989795]"
+      : accuracy >= 90
+        ? "text-green-500"
+        : accuracy >= 75
+          ? "text-yellow-500"
+          : "text-red-500";
+
   const resultBg =
     game.gameResult === "win"
       ? "bg-green-800 text-green-500"
@@ -51,6 +65,16 @@ export function GameCard({ gameUrl, blunders }: GameCardProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          {/* Accuracy */}
+          {accuracy !== null && (
+            <div className="text-right">
+              <div className={`text-sm font-semibold ${accuracyColor}`}>
+                {accuracy}%
+              </div>
+              <div className="text-[#989795] text-[0.75em]">accuracy</div>
+            </div>
+          )}
+
           {/* Stats */}
           <div className="text-right">
             <div className="text-red-500 text-sm font-semibold">
