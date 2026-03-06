@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Blunder } from "../types";
+import type { Blunder } from "../../../types";
 
 interface BlunderSummaryProps {
   readonly blunders: Blunder[];
@@ -265,7 +265,7 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
   return (
     <div className="fade-in bg-[#1e1c1a] border border-[#3d3a37] rounded-xl p-6 mt-6">
       <h3 className="m-0 mb-5 text-white text-lg font-semibold flex items-center gap-2.5">
-        <span className="w-7 h-7 bg-green-600 rounded-md flex items-center justify-center text-[0.8em] text-black font-bold">
+        <span className="w-7 h-7 bg-green-600 rounded-md flex items-center justify-center text-[13px] text-black font-bold">
           i
         </span>
         Pattern Analysis
@@ -297,7 +297,7 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
             >
               <div className="flex items-center gap-2">
                 <span
-                  className="w-6 h-6 rounded-md flex items-center justify-center text-[0.75em] font-bold"
+                  className="w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold"
                   style={{
                     backgroundColor: `${pattern.color}20`,
                     color: pattern.color,
@@ -305,25 +305,25 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
                 >
                   {pattern.icon}
                 </span>
-                <span className="text-[#989795] text-[0.75em] uppercase tracking-wider">
+                <span className="text-[#989795] text-xs uppercase tracking-wider">
                   {pattern.label}
                 </span>
                 <span
-                  className={`ml-auto text-[#989795] text-[0.7em] transition-transform duration-200 ${
+                  className={`ml-auto text-[#989795] text-[11px] transition-transform duration-200 ${
                     isExpanded ? "rotate-180" : "rotate-0"
                   }`}
                 >
                   ▼
                 </span>
               </div>
-              <span className="text-[#e0e0e0] text-[0.95em] font-medium">
+              <span className="text-[#e0e0e0] text-[15px] font-medium">
                 {pattern.value}
               </span>
 
               {/* Expanded Details */}
               {isExpanded && (
                 <div className="mt-2 pt-3 border-t border-[#3d3a37]">
-                  <p className="m-0 text-[#bababa] text-[0.85em] leading-relaxed">
+                  <p className="m-0 text-[#bababa] text-sm leading-relaxed">
                     {pattern.description}
                   </p>
                   <div
@@ -334,12 +334,12 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
                     }}
                   >
                     <span
-                      className="text-[0.7em] font-semibold uppercase tracking-wider"
+                      className="text-[11px] font-semibold uppercase tracking-wider"
                       style={{ color: pattern.color }}
                     >
                       Tip
                     </span>
-                    <p className="m-1 text-[#e0e0e0] text-[0.8em] leading-relaxed">
+                    <p className="m-1 text-[#e0e0e0] text-[13px] leading-relaxed">
                       {pattern.advice}
                     </p>
                   </div>
@@ -353,15 +353,15 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
       {/* Takeaway */}
       <div className="bg-linear-to-br from-[rgba(129,182,76,0.12)] to-[rgba(129,182,76,0.04)] p-5 rounded-xl border border-[rgba(129,182,76,0.25)]">
         <div className="flex items-center gap-2.5 mb-3">
-          <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-[0.8em] text-black font-bold">
+          <span className="w-6 h-6 bg-green-600 rounded-full flex items-center justify-center text-[13px] text-black font-bold">
             ✓
           </span>
-          <span className="text-green-600 text-[0.85em] font-semibold uppercase tracking-wider">
+          <span className="text-green-600 text-sm font-semibold uppercase tracking-wider">
             Your Priority
           </span>
         </div>
 
-        <p className="m-0 mb-4 text-white leading-relaxed text-[1.05em] font-medium">
+        <p className="m-0 mb-4 text-white leading-relaxed text-base font-medium">
           {summary.main}
         </p>
 
@@ -372,10 +372,10 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
                 key={i}
                 className="flex items-start gap-2.5 p-2 bg-black/20 rounded-lg"
               >
-                <span className="text-green-600 text-[0.85em] font-semibold min-w-5">
+                <span className="text-green-600 text-sm font-semibold min-w-5">
                   {i + 1}.
                 </span>
-                <span className="text-[#bababa] text-[0.9em] leading-relaxed">
+                <span className="text-[#bababa] text-sm leading-relaxed">
                   {detail}
                 </span>
               </div>

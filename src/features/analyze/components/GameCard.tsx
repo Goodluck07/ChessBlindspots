@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { BlunderCard } from "./BlunderCard";
-import type { Blunder } from "../types";
+import type { Blunder } from "../../../types";
 
 interface GameCardProps {
   gameUrl: string;
@@ -53,7 +53,7 @@ export function GameCard({ gameUrl, blunders }: GameCardProps) {
         <div className="flex items-center gap-4">
           {/* Stats */}
           <div className="text-right">
-            <div className="text-red-500 text-[0.9em] font-semibold">
+            <div className="text-red-500 text-sm font-semibold">
               {blunders.length} blunder{blunders.length > 1 ? "s" : ""}
             </div>
             <div className="text-[#989795] text-[0.75em]">

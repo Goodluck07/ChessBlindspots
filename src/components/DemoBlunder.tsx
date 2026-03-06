@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Chessboard } from "react-chessboard";
 
 // Famous "Scholar's Mate" trap position - Black can block but plays wrong move
@@ -59,7 +59,7 @@ export function DemoBlunder() {
     <div className="border border-[#3d3a37] rounded-lg p-5 mb-8 bg-[#272522] shadow-lg">
       {/* Header */}
       <div className="flex justify-between items-center mb-4">
-        <h3 className="m-0 text-green-600">How It Works</h3>
+        <h3 className="m-0 text-green-600 font-medium">How It Works</h3>
         <span className="text-xs text-[#989795] bg-[#3d3a37] px-2 py-1 rounded">
           Sample Analysis
         </span>
@@ -129,7 +129,7 @@ export function DemoBlunder() {
       </div>
 
       {/* Call to action */}
-      <div className="mt-5 p-3 bg-[#1e1c1a] rounded text-center text-[#989795] text-[0.9em]">
+      <div className="mt-5 p-3 bg-[#1e1c1a] rounded text-center text-[#989795] text-sm">
         Enter your chess.com username above to find blunders like this in your
         games!
       </div>

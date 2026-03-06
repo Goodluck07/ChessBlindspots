@@ -1,8 +1,5 @@
-/* @tailwind base;
-@tailwind components;
-@tailwind utilities; */
-
 @import "tailwindcss";
+
 html {
   scroll-behavior: smooth;
 }
@@ -13,7 +10,7 @@ html {
     system-ui,
     -apple-system,
     sans-serif;
-  line-height: 1.6;
+  line-height: 1.4;
   font-weight: 400;
 
   --bg-primary: #312e2b;
@@ -29,8 +26,7 @@ html {
 
 * {
   box-sizing: border-box;
-  transition-property: background-color, border-color, color;
-  transition-duration: 0.15s;
+  transition-duration: 0.2s;
   transition-timing-function: ease;
 }
 
@@ -39,7 +35,7 @@ body {
   background: linear-gradient(135deg, #2a2725 0%, #312e2b 50%, #2a2725 100%);
   background-attachment: fixed;
   color: #bababa;
-  min-height: 100vh;
+  min-height: 100dvh;
   position: relative;
 }
 
@@ -72,48 +68,15 @@ body::before {
 }
 
 h1 {
-  font-size: 2.2em;
-  margin-bottom: 0.3em;
+  font-size: 36px;
   color: #ffffff;
   font-weight: 600;
 }
 
 h2 {
-  font-size: 1.4em;
-  margin-top: 2em;
-  margin-bottom: 1em;
+  font-size: 30px;
   color: #ffffff;
-  font-weight: 500;
-}
-
-h3 {
-  font-weight: 500;
-}
-
-a {
-  color: #81b64c;
-  text-decoration: none;
-}
-
-/* a:hover {
-  text-decoration: underline;
-} */
-
-/* Card hover effects */
-.card-hover {
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-}
-
-/* Button styles */
-button {
-  font-family: inherit;
+  font-weight: 600;
 }
 
 /* Scrollbar styling */
@@ -159,63 +122,17 @@ button {
   animation: fadeIn 0.3s ease forwards;
 }
 
-/* Landing page nav: hide text links on mobile, keep the CTA button */
-@media (max-width: 600px) {
-  .landing-nav-link {
-    display: none !important;
-  }
-}
-
 /* Mobile Responsive */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   h1 {
-    font-size: 1.6em;
+    font-size: 28px;
   }
 
   h2 {
-    font-size: 1.2em;
+    font-size: 24px;
   }
 
-  /* Stack header nav on mobile */
-  header > div {
-    flex-direction: column;
-    align-items: center !important;
-    gap: 12px !important;
-  }
-
-  header > div > div:first-child {
-    justify-content: center;
-  }
-
-  header h1 {
-    text-align: center;
-    font-size: 1.2em !important;
-  }
-
-  header nav {
-    justify-content: center;
-    width: 100%;
-  }
-
-  header nav button {
-    padding: 8px 14px !important;
-    font-size: 0.85em !important;
-  }
-
-  /* Smaller padding on mobile */
-  section {
-    padding: 16px !important;
-  }
-
-  /* Full width boards on mobile */
-  .chessboard-container {
-    width: 100% !important;
-    max-width: 280px;
-    margin: 0 auto;
-  }
-
-  /* Stats cards on mobile */
-  .stats-grid {
-    grid-template-columns: 1fr !important;
+  .landing-nav-link {
+    display: none !important;
   }
 }

@@ -1,18 +1,14 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
 import { Chess } from "chess.js";
-import { UsernameForm } from "./components/UsernameForm";
-import { BlunderCard } from "./components/BlunderCard";
-import { DemoBlunder } from "./components/DemoBlunder";
-import { BlunderSummary } from "./components/BlunderSummary";
-import { GameCard } from "./components/GameCard";
-import { Navigation } from "./components/Navigation";
-import { LandingPage } from "./components/LandingPage";
-import { InsightsPage } from "./components/InsightsPage";
+import { LandingPage } from "./pages/Landing";
+import { AnalyzePage } from "./pages/Analyze";
+import { InsightsPage } from "./pages/Insights";
+import { PracticePage } from "./pages/Practice";
+import { NotFoundPage } from "./pages/NotFound";
 import { fetchRecentGames } from "./services/chesscom";
 import { evaluatePosition, destroyEngine } from "./services/stockfish";
 import type { Blunder, ChessGame, TimeClass } from "./types";
-
-type Page = "analyze" | "insights" | "practice";
 
 const BLUNDER_THRESHOLD = 200; // centipawns (2 pawns)
 const MAX_BLUNDERS_TO_SHOW = 5;
@@ -95,28 +91,7 @@ function timeAgo(ts: number): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-const TIME_CLASS_LABELS: Record<TimeClass | "all", string> = {
-  all: "All Games",
-  bullet: "Bullet",
-  blitz: "Blitz",
-  rapid: "Rapid",
-  daily: "Daily",
-};
-
-const APP_PAGES: Page[] = ["analyze", "insights", "practice"];
-
-function getHashPage(): Page | null {
-  const h = window.location.hash.slice(1) as Page;
-  return APP_PAGES.includes(h) ? h : null;
-}
-
 function App() {
-  const [showLanding, setShowLanding] = useState<boolean>(
-    () => getHashPage() === null,
-  );
-  const [currentPage, setCurrentPage] = useState<Page>(
-    () => getHashPage() ?? "analyze",
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allBlunders, setAllBlunders] = useState<Blunder[]>([]);
@@ -126,37 +101,6 @@ function App() {
     "all",
   );
   const [viewMode, setViewMode] = useState<"overall" | "byGame">("overall");
-
-  // Sync hash → state when user hits back/forward
-  useEffect(() => {
-    const onHashChange = () => {
-      const page = getHashPage();
-      if (page) {
-        setShowLanding(false);
-        setCurrentPage(page);
-      } else setShowLanding(true);
-    };
-    window.addEventListener("hashchange", onHashChange);
-    return () => window.removeEventListener("hashchange", onHashChange);
-  }, []);
-
-  // Navigate within app and keep hash in sync
-  const navigateTo = (page: Page) => {
-    setCurrentPage(page);
-    window.location.hash = page;
-  };
-
-  const enterApp = () => {
-    setShowLanding(false);
-    window.location.hash = "analyze";
-    window.scrollTo(0, 0);
-  };
-
-  const goToLanding = () => {
-    setShowLanding(true);
-    window.location.hash = "";
-    window.scrollTo(0, 0);
-  };
 
   // Load a previously cached analysis
   const restoreFromCache = (username: string) => {
@@ -257,279 +201,52 @@ function App() {
     }
   };
 
-  if (showLanding) {
-    return <LandingPage onGetStarted={enterApp} />;
-  }
+  const TIME_CLASS_LABELS: Record<TimeClass | "all", string> = {
+    all: "All Games",
+    bullet: "Bullet",
+    blitz: "Blitz",
+    rapid: "Rapid",
+    daily: "Daily",
+  };
 
   return (
-    <>
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-linear-to-b from-[rgba(39,37,34,0.98)] to-[rgba(39,37,34,0.95)] backdrop-blur-md border-b border-[#3d3a37] py-3 px-5">
-        <div className="max-w-3xl mx-auto flex items-center justify-between gap-4 flex-wrap">
-          <div
-            onClick={goToLanding}
-            className="flex items-center gap-2.5 cursor-pointer"
-            title="Back to home"
-          >
-            <div className="w-8 h-8 bg-linear-to-br from-green-400 to-green-700 rounded-lg flex items-center justify-center text-lg shadow-md">
-              &#9816;
-            </div>
-            <h1 className="m-0 text-xl font-bold text-white tracking-tight">
-              Chess Blindspots
-            </h1>
-          </div>
-          <Navigation currentPage={currentPage} onNavigate={navigateTo} />
-        </div>
-      </header>
-
-      <div className="max-w-3xl mx-auto px-5 py-8 min-h-screen">
-        {/* Analyze Page */}
-        {currentPage === "analyze" && (
-          <>
-            {/* Search Section */}
-            <section className="bg-[#1e1c1a] rounded-xl p-6 mb-8 border border-[#3d3a37]">
-              <UsernameForm onSubmit={analyzeGames} loading={loading} />
-
-              {/* Time Control Filter */}
-              <div className="mt-5">
-                <label className="block text-[#989795] text-[0.85em] mb-2 uppercase tracking-wide">
-                  Time Control
-                </label>
-                <div className="flex gap-2 flex-wrap">
-                  {(
-                    Object.keys(TIME_CLASS_LABELS) as (TimeClass | "all")[]
-                  ).map((tc) => (
-                    <button
-                      key={tc}
-                      onClick={() => setTimeClassFilter(tc)}
-                      disabled={loading}
-                      className={`px-4 py-2 rounded-full text-[0.9em] transition-all duration-200 cursor-pointer ${
-                        timeClassFilter === tc
-                          ? "bg-green-600 text-black font-semibold"
-                          : "bg-[#3d3a37] text-[#bababa]"
-                      } ${loading ? "opacity-60 cursor-not-allowed" : ""}`}
-                    >
-                      {TIME_CLASS_LABELS[tc]}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </section>
-
-            {/* Error Message */}
-            {error && (
-              <div className="p-4 bg-[#3d2522] border border-red-500 rounded-lg text-red-500 mb-6 text-[0.95em]">
-                {error}
-              </div>
-            )}
-
-            {/* Progress Indicator */}
-            {progress && (
-              <div className="flex items-center justify-center gap-3 text-[#989795] mb-8 p-5 bg-[#1e1c1a] rounded-lg border border-[#3d3a37]">
-                {loading && (
-                  <div className="w-6 h-6 border-3 border-[#3d3a37] border-t-3 border-t-green-600 rounded-full animate-spin" />
-                )}
-                <span className="text-base">
-                  {progress}
-                  {gamesAnalyzed > 0 && loading && (
-                    <span className="text-green-600 ml-2">
-                      ({gamesAnalyzed}/{GAMES_TO_ANALYZE})
-                    </span>
-                  )}
-                </span>
-              </div>
-            )}
-
-            {/* Demo Section */}
-            {allBlunders.length === 0 && !error && !loading && <DemoBlunder />}
-
-            {/* Results Section */}
-            {filteredBlunders.length > 0 && (
-              <section>
-                {/* Results Header with Controls */}
-                <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-                  <h2 className="m-0 text-2xl">
-                    {viewMode === "overall"
-                      ? "Your Worst Blunders"
-                      : "Blunders By Game"}
-                    {timeClassFilter !== "all" && (
-                      <span className="text-[0.5em] text-green-600 ml-3 capitalize font-normal">
-                        {timeClassFilter} only
-                      </span>
-                    )}
-                  </h2>
-
-                  {/* View Toggle */}
-                  <div className="flex bg-[#272522] rounded-lg p-1 border border-[#3d3a37]">
-                    <button
-                      onClick={() => setViewMode("overall")}
-                      className={`px-4 py-2 rounded-md text-[0.85em] transition-all duration-200 ${
-                        viewMode === "overall"
-                          ? "bg-green-600 text-black font-semibold"
-                          : "text-[#bababa]"
-                      }`}
-                    >
-                      Top 5
-                    </button>
-                    <button
-                      onClick={() => setViewMode("byGame")}
-                      className={`px-4 py-2 rounded-md text-[0.85em] transition-all duration-200 ${
-                        viewMode === "byGame"
-                          ? "bg-green-600 text-black font-semibold"
-                          : "text-[#bababa]"
-                      }`}
-                    >
-                      By Game
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats Bar */}
-                <div className="grid gap-3 grid-cols-[repeat(auto-fit,minmax(140px,1fr))] mb-7">
-                  <div className="p-4 bg-[#1e1c1a] rounded-lg border border-[#3d3a37] border-l-4 border-l-red-500">
-                    <div className="text-[#989795] text-[0.7em] uppercase tracking-wide mb-1 font-medium">
-                      Total Blunders
-                    </div>
-                    <div className="text-red-500 text-[1.8em] font-bold leading-none">
-                      {filteredBlunders.length}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-[#1e1c1a] rounded-lg border border-[#3d3a37] border-l-4 border-l-green-600">
-                    <div className="text-[#989795] text-[0.7em] uppercase tracking-wide mb-1 font-medium">
-                      Games Analyzed
-                    </div>
-                    <div className="text-green-600 text-[1.8em] font-bold leading-none">
-                      {gamesAnalyzed}
-                    </div>
-                  </div>
-                  <div className="p-4 bg-[#1e1c1a] rounded-lg border border-[#3d3a37] border-l-4 border-l-yellow-500">
-                    <div className="text-[#989795] text-[0.7em] uppercase tracking-wide mb-1 font-medium">
-                      Worst Drop
-                    </div>
-                    <div className="text-yellow-500 text-[1.8em] font-bold leading-none">
-                      {Math.abs(
-                        filteredBlunders[0]?.evalDrop / 100 || 0,
-                      ).toFixed(1)}
-                      <span className="text-[0.5em] font-medium ml-1 text-[#989795]">
-                        pawns
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Blunder Cards */}
-                <div className="flex flex-col gap-4">
-                  {viewMode === "overall" ? (
-                    <>
-                      {displayBlunders.map((blunder) => (
-                        <BlunderCard
-                          key={`${blunder.gameUrl}-${blunder.moveNumber}`}
-                          blunder={blunder}
-                        />
-                      ))}
-                    </>
-                  ) : (
-                    <>
-                      {Object.entries(blundersByGame).map(
-                        ([gameUrl, gameBlunders]) => (
-                          <GameCard
-                            key={gameUrl}
-                            gameUrl={gameUrl}
-                            blunders={gameBlunders}
-                          />
-                        ),
-                      )}
-                    </>
-                  )}
-                </div>
-
-                {/* Summary */}
-                <div className="mt-8">
-                  <BlunderSummary
-                    blunders={
-                      viewMode === "overall"
-                        ? displayBlunders
-                        : filteredBlunders
-                    }
-                  />
-                </div>
-              </section>
-            )}
-
-            {/* No Results for Filter */}
-            {allBlunders.length > 0 && filteredBlunders.length === 0 && (
-              <div className="p-10 bg-[#1e1c1a] rounded-xl text-center text-[#989795] border border-[#3d3a37]">
-                <p className="text-lg m-0">
-                  No blunders found in{" "}
-                  <span className="text-green-600 capitalize">
-                    {timeClassFilter}
-                  </span>{" "}
-                  games.
-                </p>
-                <p className="text-sm mt-2 mb-0">
-                  Try selecting a different time control.
-                </p>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* Insights Page */}
-        {currentPage === "insights" && (
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/analyze"
+        element={
+          <AnalyzePage
+            allBlunders={allBlunders}
+            filteredBlunders={filteredBlunders}
+            displayBlunders={displayBlunders}
+            blundersByGame={blundersByGame}
+            loading={loading}
+            error={error}
+            progress={progress}
+            gamesAnalyzed={gamesAnalyzed}
+            timeClassFilter={timeClassFilter}
+            viewMode={viewMode}
+            TIME_CLASS_LABELS={TIME_CLASS_LABELS}
+            onAnalyzeGames={analyzeGames}
+            onSetTimeClassFilter={setTimeClassFilter}
+            onSetViewMode={setViewMode}
+          />
+        }
+      />
+      <Route
+        path="/insights"
+        element={
           <InsightsPage
             blunders={filteredBlunders}
             gamesAnalyzed={gamesAnalyzed}
-            onGoAnalyze={() => navigateTo("analyze")}
-            onViewWorstBlunder={() => navigateTo("analyze")}
             cachedAnalyses={getAllCached()}
             onLoadCache={restoreFromCache}
           />
-        )}
-
-        {/* Practice Page - Coming Soon */}
-        {currentPage === "practice" && (
-          <div className="bg-[#1e1c1a] rounded-xl px-10 py-16 text-center border border-[#3d3a37]">
-            <div className="text-4xl mb-5 opacity-60">🎯</div>
-            <h2 className="m-0 mb-4 text-white text-[1.8em]">
-              Practice Mode Coming Soon
-            </h2>
-            <p className="text-[#989795] text-[1.1em] max-w-125 mx-auto mb-6">
-              Train on positions where you've blundered before. Fix your
-              blindspots with targeted puzzles from your own games.
-            </p>
-            <div className="flex justify-center gap-4 flex-wrap">
-              {[
-                "Your Blunders",
-                "Spaced Repetition",
-                "Focus Mode",
-                "Progress Tracking",
-              ].map((feature) => (
-                <span
-                  key={feature}
-                  className="px-4 py-2 bg-[#272522] rounded-full text-[0.9em] text-green-600 border border-[#3d3a37]"
-                >
-                  {feature}
-                </span>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* Footer */}
-      <footer className="text-center py-6 border-t border-[#3d3a37] mt-10 text-[#989795] text-[0.85em]">
-        <a
-          href="https://github.com/Goodluck07/ChessBlindspots"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-green-600 hover:underline"
-        >
-          View on GitHub
-        </a>
-        <span className="mx-3">|</span>
-        <span>Built with Stockfish + React</span>
-      </footer>
-    </>
+        }
+      />
+      <Route path="/practice" element={<PracticePage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 

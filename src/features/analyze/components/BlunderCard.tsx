@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Chessboard } from "react-chessboard";
-import type { Blunder } from "../types";
+import type { Blunder } from "../../../types";
 
 interface BlunderCardProps {
   blunder: Blunder;
@@ -245,7 +245,7 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
             className={`px-2 py-1 rounded text-sm font-semibold flex items-center gap-1.5 whitespace-nowrap ${severity.bgClass} ${severity.textClass}`}
           >
             {severity.label}
-            <span className="opacity-80 text-[0.9em]">
+            <span className="opacity-80 text-sm">
               -{(blunder.evalDrop / 100).toFixed(1)}
             </span>
           </span>
@@ -257,7 +257,7 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
           </span>
         </div>
         {!compact && (
-          <span className="text-[#989795] text-[0.85em] max-w-37.5 truncate">
+          <span className="text-[#989795] text-sm max-w-37.5 truncate">
             vs {blunder.opponent}
           </span>
         )}
@@ -305,7 +305,7 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
             }`}
           >
             <span className="text-[#989795] text-[0.75em]">You played</span>
-            <div className="text-[#fa412d] font-semibold mt-0.5 text-[0.9em]">
+            <div className="text-[#fa412d] font-semibold mt-0.5 text-sm">
               {movePlayedDisplay}
             </div>
           </div>
@@ -318,12 +318,12 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
             }`}
           >
             <span className="text-[#989795] text-[0.75em]">Best move</span>
-            <div className="text-[#81b64c] font-semibold mt-0.5 text-[0.9em]">
+            <div className="text-[#81b64c] font-semibold mt-0.5 text-sm">
               {bestMoveDisplay}
             </div>
           </div>
 
-          <div className="text-[#bababa] bg-[#1e1c1a] p-2.5 rounded text-[0.8em] leading-tight flex-1">
+          <div className="text-[#bababa] bg-[#1e1c1a] p-2.5 rounded text-[13px] leading-tight flex-1">
             {outcomeMessage}
           </div>
 
@@ -332,7 +332,7 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
               href={blunder.gameUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#81b64c] text-[0.8em] no-underline"
+              className="text-[#81b64c] text-[13px] no-underline"
             >
               View full game →
             </a>
