@@ -1,18 +1,14 @@
-import { useState, useEffect } from 'react';
-import { Chess } from 'chess.js';
-import { UsernameForm } from './components/UsernameForm';
-import { BlunderCard } from './components/BlunderCard';
-import { DemoBlunder } from './components/DemoBlunder';
-import { BlunderSummary } from './components/BlunderSummary';
-import { GameCard } from './components/GameCard';
-import { Navigation } from './components/Navigation';
-import { LandingPage } from './components/LandingPage';
-import { InsightsPage } from './components/InsightsPage';
-import { fetchRecentGames } from './services/chesscom';
-import { evaluatePosition, destroyEngine } from './services/stockfish';
-import type { Blunder, ChessGame, TimeClass } from './types';
-
-type Page = 'analyze' | 'insights' | 'practice';
+import { useState } from "react";
+import { Routes, Route } from "react-router-dom";
+import { Chess } from "chess.js";
+import { LandingPage } from "./pages/Landing";
+import { AnalyzePage } from "./pages/Analyze";
+import { InsightsPage } from "./pages/Insights";
+import { PracticePage } from "./pages/Practice";
+import { NotFoundPage } from "./pages/NotFound";
+import { fetchRecentGames } from "./services/chesscom";
+import { evaluatePosition, destroyEngine } from "./services/stockfish";
+import type { Blunder, ChessGame, TimeClass } from "./types";
 
 const BLUNDER_THRESHOLD = 200; // centipawns (2 pawns)
 const MAX_BLUNDERS_TO_SHOW = 5;
@@ -32,16 +28,29 @@ function cacheKey(username: string) {
   return `chessblinds_${username.toLowerCase()}`;
 }
 
-function saveToCache(username: string, blunders: Blunder[], gamesAnalyzed: number) {
+function saveToCache(
+  username: string,
+  blunders: Blunder[],
+  gamesAnalyzed: number,
+) {
   try {
-    const data: CachedAnalysis = { username, blunders, gamesAnalyzed, timestamp: Date.now() };
+    const data: CachedAnalysis = {
+      username,
+      blunders,
+      gamesAnalyzed,
+      timestamp: Date.now(),
+    };
     localStorage.setItem(cacheKey(username), JSON.stringify(data));
-    const names: string[] = JSON.parse(localStorage.getItem('chessblinds_usernames') || '[]');
+    const names: string[] = JSON.parse(
+      localStorage.getItem("chessblinds_usernames") || "[]",
+    );
     if (!names.includes(username.toLowerCase())) {
       names.push(username.toLowerCase());
-      localStorage.setItem('chessblinds_usernames', JSON.stringify(names));
+      localStorage.setItem("chessblinds_usernames", JSON.stringify(names));
     }
-  } catch { /* storage full or unavailable */ }
+  } catch {
+    /* storage full or unavailable */
+  }
 }
 
 function loadFromCache(username: string): CachedAnalysis | null {
@@ -54,17 +63,23 @@ function loadFromCache(username: string): CachedAnalysis | null {
       return null;
     }
     return data;
-  } catch { return null; }
+  } catch {
+    return null;
+  }
 }
 
 function getAllCached(): CachedAnalysis[] {
   try {
-    const names: string[] = JSON.parse(localStorage.getItem('chessblinds_usernames') || '[]');
+    const names: string[] = JSON.parse(
+      localStorage.getItem("chessblinds_usernames") || "[]",
+    );
     return names
-      .map(n => loadFromCache(n))
+      .map((n) => loadFromCache(n))
       .filter((d): d is CachedAnalysis => d !== null)
       .sort((a, b) => b.timestamp - a.timestamp);
-  } catch { return []; }
+  } catch {
+    return [];
+  }
 }
 
 function timeAgo(ts: number): string {
@@ -76,60 +91,16 @@ function timeAgo(ts: number): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
-const TIME_CLASS_LABELS: Record<TimeClass | 'all', string> = {
-  all: 'All Games',
-  bullet: 'Bullet',
-  blitz: 'Blitz',
-  rapid: 'Rapid',
-  daily: 'Daily',
-};
-
-const APP_PAGES: Page[] = ['analyze', 'insights', 'practice'];
-
-function getHashPage(): Page | null {
-  const h = window.location.hash.slice(1) as Page;
-  return APP_PAGES.includes(h) ? h : null;
-}
-
 function App() {
-  const [showLanding, setShowLanding] = useState<boolean>(() => getHashPage() === null);
-  const [currentPage, setCurrentPage] = useState<Page>(() => getHashPage() ?? 'analyze');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [allBlunders, setAllBlunders] = useState<Blunder[]>([]);
-  const [progress, setProgress] = useState('');
+  const [progress, setProgress] = useState("");
   const [gamesAnalyzed, setGamesAnalyzed] = useState(0);
-  const [timeClassFilter, setTimeClassFilter] = useState<TimeClass | 'all'>('all');
-  const [viewMode, setViewMode] = useState<'overall' | 'byGame'>('overall');
-
-  // Sync hash → state when user hits back/forward
-  useEffect(() => {
-    const onHashChange = () => {
-      const page = getHashPage();
-      if (page) { setShowLanding(false); setCurrentPage(page); }
-      else setShowLanding(true);
-    };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
-  }, []);
-
-  // Navigate within app and keep hash in sync
-  const navigateTo = (page: Page) => {
-    setCurrentPage(page);
-    window.location.hash = page;
-  };
-
-  const enterApp = () => {
-    setShowLanding(false);
-    window.location.hash = 'analyze';
-    window.scrollTo(0, 0);
-  };
-
-  const goToLanding = () => {
-    setShowLanding(true);
-    window.location.hash = '';
-    window.scrollTo(0, 0);
-  };
+  const [timeClassFilter, setTimeClassFilter] = useState<TimeClass | "all">(
+    "all",
+  );
+  const [viewMode, setViewMode] = useState<"overall" | "byGame">("overall");
 
   // Load a previously cached analysis
   const restoreFromCache = (username: string) => {
@@ -137,13 +108,16 @@ function App() {
     if (!cached) return;
     setAllBlunders(cached.blunders);
     setGamesAnalyzed(cached.gamesAnalyzed);
-    setProgress(`Loaded saved analysis for "${cached.username}" (${timeAgo(cached.timestamp)})`);
+    setProgress(
+      `Loaded saved analysis for "${cached.username}" (${timeAgo(cached.timestamp)})`,
+    );
   };
 
   // Filter blunders based on selected time class
-  const filteredBlunders = timeClassFilter === 'all'
-    ? allBlunders
-    : allBlunders.filter(b => b.timeClass === timeClassFilter);
+  const filteredBlunders =
+    timeClassFilter === "all"
+      ? allBlunders
+      : allBlunders.filter((b) => b.timeClass === timeClassFilter);
 
   // Take top 5 from filtered results (use spread to avoid mutating)
   const displayBlunders = [...filteredBlunders]
@@ -151,17 +125,20 @@ function App() {
     .slice(0, MAX_BLUNDERS_TO_SHOW);
 
   // Group blunders by game for "by game" view
-  const blundersByGame = filteredBlunders.reduce((acc, blunder) => {
-    const key = blunder.gameUrl;
-    if (!acc[key]) {
-      acc[key] = [];
-    }
-    acc[key].push(blunder);
-    return acc;
-  }, {} as Record<string, Blunder[]>);
+  const blundersByGame = filteredBlunders.reduce(
+    (acc, blunder) => {
+      const key = blunder.gameUrl;
+      if (!acc[key]) {
+        acc[key] = [];
+      }
+      acc[key].push(blunder);
+      return acc;
+    },
+    {} as Record<string, Blunder[]>,
+  );
 
   // Sort each game's blunders by move number
-  Object.values(blundersByGame).forEach(gameBlunders => {
+  Object.values(blundersByGame).forEach((gameBlunders) => {
     gameBlunders.sort((a, b) => a.moveNumber - b.moveNumber);
   });
 
@@ -169,21 +146,28 @@ function App() {
     setLoading(true);
     setError(null);
     setAllBlunders([]);
-    setProgress('Fetching games...');
+    setProgress("Fetching games...");
     setGamesAnalyzed(0);
 
     try {
       const allGames = await fetchRecentGames(username, GAMES_TO_ANALYZE * 2); // Fetch more to have enough after filtering
-      const games = timeClassFilter === 'all'
-        ? allGames.slice(0, GAMES_TO_ANALYZE)
-        : allGames.filter(g => g.timeClass === timeClassFilter).slice(0, GAMES_TO_ANALYZE);
+      const games =
+        timeClassFilter === "all"
+          ? allGames.slice(0, GAMES_TO_ANALYZE)
+          : allGames
+              .filter((g) => g.timeClass === timeClassFilter)
+              .slice(0, GAMES_TO_ANALYZE);
 
       if (games.length === 0) {
-        setError(`No ${timeClassFilter === 'all' ? '' : timeClassFilter + ' '}games found.`);
+        setError(
+          `No ${timeClassFilter === "all" ? "" : timeClassFilter + " "}games found.`,
+        );
         setLoading(false);
         return;
       }
-      setProgress(`Found ${games.length} ${timeClassFilter === 'all' ? '' : timeClassFilter + ' '}games. Starting analysis...`);
+      setProgress(
+        `Found ${games.length} ${timeClassFilter === "all" ? "" : timeClassFilter + " "}games. Starting analysis...`,
+      );
 
       const allBlunders: Blunder[] = [];
 
@@ -202,498 +186,101 @@ function App() {
       saveToCache(username, allBlunders, games.length);
 
       if (allBlunders.length === 0) {
-        setProgress('No blunders found! You played well.');
+        setProgress("No blunders found! You played well.");
       } else {
-        setProgress(`Found ${allBlunders.length} blunders across ${games.length} games.`);
+        setProgress(
+          `Found ${allBlunders.length} blunders across ${games.length} games.`,
+        );
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred');
-      setProgress('');
+      setError(err instanceof Error ? err.message : "An error occurred");
+      setProgress("");
     } finally {
       setLoading(false);
       destroyEngine();
     }
   };
 
-  if (showLanding) {
-    return <LandingPage onGetStarted={enterApp} />;
-  }
+  const TIME_CLASS_LABELS: Record<TimeClass | "all", string> = {
+    all: "All Games",
+    bullet: "Bullet",
+    blitz: "Blitz",
+    rapid: "Rapid",
+    daily: "Daily",
+  };
 
   return (
-    <>
-      {/* Sticky Header */}
-      <header style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        background: 'linear-gradient(180deg, rgba(39, 37, 34, 0.98) 0%, rgba(39, 37, 34, 0.95) 100%)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid #3d3a37',
-        padding: '14px 20px',
-      }}>
-        <div style={{
-          maxWidth: '900px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px',
-          flexWrap: 'wrap',
-        }}>
-          <div
-            onClick={goToLanding}
-            style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
-            title="Back to home"
-          >
-            <div style={{
-              width: '32px',
-              height: '32px',
-              background: 'linear-gradient(135deg, #81b64c 0%, #6a9a3d 100%)',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '18px',
-              boxShadow: '0 2px 8px rgba(129, 182, 76, 0.3)',
-            }}>
-              &#9816;
-            </div>
-            <h1 style={{
-              margin: 0,
-              fontSize: '1.3em',
-              fontWeight: 700,
-              color: '#ffffff',
-              letterSpacing: '-0.3px',
-            }}>
-              Chess Blindspots
-            </h1>
-          </div>
-          <Navigation currentPage={currentPage} onNavigate={navigateTo} />
-        </div>
-      </header>
-
-      <div style={{ maxWidth: '900px', margin: '0 auto', padding: '32px 20px', minHeight: '100vh' }}>
-
-      {/* Analyze Page */}
-      {currentPage === 'analyze' && (
-        <>
-          {/* Search Section */}
-      <section style={{
-        backgroundColor: '#1e1c1a',
-        borderRadius: '12px',
-        padding: '24px',
-        marginBottom: '32px',
-        border: '1px solid #3d3a37',
-      }}>
-        <UsernameForm onSubmit={analyzeGames} loading={loading} />
-
-        {/* Time Control Filter */}
-        <div style={{ marginTop: '20px' }}>
-          <label style={{
-            display: 'block',
-            color: '#989795',
-            fontSize: '0.85em',
-            marginBottom: '10px',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
-          }}>
-            Time Control
-          </label>
-          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {(Object.keys(TIME_CLASS_LABELS) as (TimeClass | 'all')[]).map((tc) => (
-              <button
-                key={tc}
-                onClick={() => setTimeClassFilter(tc)}
-                disabled={loading}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  border: 'none',
-                  backgroundColor: timeClassFilter === tc ? '#81b64c' : '#3d3a37',
-                  color: timeClassFilter === tc ? '#1a1a1a' : '#bababa',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  fontWeight: timeClassFilter === tc ? 600 : 400,
-                  opacity: loading ? 0.6 : 1,
-                  transition: 'all 0.2s ease',
-                  fontSize: '0.9em',
-                }}
-              >
-                {TIME_CLASS_LABELS[tc]}
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Error Message */}
-      {error && (
-        <div style={{
-          padding: '16px 20px',
-          backgroundColor: '#3d2522',
-          border: '1px solid #fa412d',
-          borderRadius: '8px',
-          color: '#fa412d',
-          marginBottom: '24px',
-          fontSize: '0.95em',
-        }}>
-          {error}
-        </div>
-      )}
-
-      {/* Progress Indicator */}
-      {progress && (
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '12px',
-          color: '#989795',
-          marginBottom: '32px',
-          padding: '20px',
-          backgroundColor: '#1e1c1a',
-          borderRadius: '8px',
-          border: '1px solid #3d3a37',
-        }}>
-          {loading && (
-            <div style={{
-              width: '24px',
-              height: '24px',
-              border: '3px solid #3d3a37',
-              borderTop: '3px solid #81b64c',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite',
-            }} />
-          )}
-          <span style={{ fontSize: '1em' }}>
-            {progress}
-            {gamesAnalyzed > 0 && loading && (
-              <span style={{ color: '#81b64c', marginLeft: '8px' }}>
-                ({gamesAnalyzed}/{GAMES_TO_ANALYZE})
-              </span>
-            )}
-          </span>
-        </div>
-      )}
-
-      {/* Demo Section */}
-      {allBlunders.length === 0 && !error && !loading && (
-        <DemoBlunder />
-      )}
-
-      {/* Results Section */}
-      {filteredBlunders.length > 0 && (
-        <section>
-          {/* Results Header with Controls */}
-          <div style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: '24px',
-            flexWrap: 'wrap',
-            gap: '16px',
-          }}>
-            <h2 style={{ margin: 0, fontSize: '1.5em' }}>
-              {viewMode === 'overall' ? 'Your Worst Blunders' : 'Blunders By Game'}
-              {timeClassFilter !== 'all' && (
-                <span style={{
-                  fontSize: '0.5em',
-                  color: '#81b64c',
-                  marginLeft: '12px',
-                  textTransform: 'capitalize',
-                  fontWeight: 400,
-                }}>
-                  {timeClassFilter} only
-                </span>
-              )}
-            </h2>
-
-            {/* View Toggle */}
-            <div style={{
-              display: 'flex',
-              backgroundColor: '#272522',
-              borderRadius: '8px',
-              padding: '4px',
-              border: '1px solid #3d3a37',
-            }}>
-              <button
-                onClick={() => setViewMode('overall')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: viewMode === 'overall' ? '#81b64c' : 'transparent',
-                  color: viewMode === 'overall' ? '#1a1a1a' : '#bababa',
-                  cursor: 'pointer',
-                  fontWeight: viewMode === 'overall' ? 600 : 400,
-                  fontSize: '0.85em',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                Top 5
-              </button>
-              <button
-                onClick={() => setViewMode('byGame')}
-                style={{
-                  padding: '8px 16px',
-                  borderRadius: '6px',
-                  border: 'none',
-                  backgroundColor: viewMode === 'byGame' ? '#81b64c' : 'transparent',
-                  color: viewMode === 'byGame' ? '#1a1a1a' : '#bababa',
-                  cursor: 'pointer',
-                  fontWeight: viewMode === 'byGame' ? 600 : 400,
-                  fontSize: '0.85em',
-                  transition: 'all 0.2s ease',
-                }}
-              >
-                By Game
-              </button>
-            </div>
-          </div>
-
-          {/* Stats Bar */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-            gap: '12px',
-            marginBottom: '28px',
-          }}>
-            <div style={{
-              padding: '16px 20px',
-              backgroundColor: '#1e1c1a',
-              borderRadius: '10px',
-              border: '1px solid #3d3a37',
-              borderLeft: '3px solid #fa412d',
-            }}>
-              <div style={{
-                color: '#989795',
-                fontSize: '0.7em',
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                marginBottom: '6px',
-                fontWeight: 500,
-              }}>
-                Total Blunders
-              </div>
-              <div style={{
-                color: '#fa412d',
-                fontSize: '1.8em',
-                fontWeight: 700,
-                lineHeight: 1,
-              }}>
-                {filteredBlunders.length}
-              </div>
-            </div>
-            <div style={{
-              padding: '16px 20px',
-              backgroundColor: '#1e1c1a',
-              borderRadius: '10px',
-              border: '1px solid #3d3a37',
-              borderLeft: '3px solid #81b64c',
-            }}>
-              <div style={{
-                color: '#989795',
-                fontSize: '0.7em',
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                marginBottom: '6px',
-                fontWeight: 500,
-              }}>
-                Games Analyzed
-              </div>
-              <div style={{
-                color: '#81b64c',
-                fontSize: '1.8em',
-                fontWeight: 700,
-                lineHeight: 1,
-              }}>
-                {gamesAnalyzed}
-              </div>
-            </div>
-            <div style={{
-              padding: '16px 20px',
-              backgroundColor: '#1e1c1a',
-              borderRadius: '10px',
-              border: '1px solid #3d3a37',
-              borderLeft: '3px solid #e6a23c',
-            }}>
-              <div style={{
-                color: '#989795',
-                fontSize: '0.7em',
-                textTransform: 'uppercase',
-                letterSpacing: '0.8px',
-                marginBottom: '6px',
-                fontWeight: 500,
-              }}>
-                Worst Drop
-              </div>
-              <div style={{
-                color: '#e6a23c',
-                fontSize: '1.8em',
-                fontWeight: 700,
-                lineHeight: 1,
-              }}>
-                {Math.abs(filteredBlunders[0]?.evalDrop / 100 || 0).toFixed(1)}
-                <span style={{ fontSize: '0.5em', fontWeight: 500, marginLeft: '4px', color: '#989795' }}>
-                  pawns
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Blunder Cards */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {viewMode === 'overall' ? (
-              <>
-                {displayBlunders.map((blunder) => (
-                  <BlunderCard key={`${blunder.gameUrl}-${blunder.moveNumber}`} blunder={blunder} />
-                ))}
-              </>
-            ) : (
-              <>
-                {Object.entries(blundersByGame).map(([gameUrl, gameBlunders]) => (
-                  <GameCard key={gameUrl} gameUrl={gameUrl} blunders={gameBlunders} />
-                ))}
-              </>
-            )}
-          </div>
-
-          {/* Summary */}
-          <div style={{ marginTop: '32px' }}>
-            <BlunderSummary blunders={viewMode === 'overall' ? displayBlunders : filteredBlunders} />
-          </div>
-        </section>
-      )}
-
-      {/* No Results for Filter */}
-      {allBlunders.length > 0 && filteredBlunders.length === 0 && (
-        <div style={{
-          padding: '40px 20px',
-          backgroundColor: '#1e1c1a',
-          borderRadius: '12px',
-          textAlign: 'center',
-          color: '#989795',
-          border: '1px solid #3d3a37',
-        }}>
-          <p style={{ fontSize: '1.1em', margin: 0 }}>
-            No blunders found in <span style={{ color: '#81b64c', textTransform: 'capitalize' }}>{timeClassFilter}</span> games.
-          </p>
-          <p style={{ fontSize: '0.9em', marginTop: '8px', marginBottom: 0 }}>
-            Try selecting a different time control.
-          </p>
-        </div>
-      )}
-        </>
-      )}
-
-      {/* Insights Page */}
-      {currentPage === 'insights' && (
-        <InsightsPage
-          blunders={filteredBlunders}
-          gamesAnalyzed={gamesAnalyzed}
-          onGoAnalyze={() => navigateTo('analyze')}
-          onViewWorstBlunder={() => navigateTo('analyze')}
-          cachedAnalyses={getAllCached()}
-          onLoadCache={restoreFromCache}
-        />
-      )}
-
-      {/* Practice Page - Coming Soon */}
-      {currentPage === 'practice' && (
-        <div style={{
-          backgroundColor: '#1e1c1a',
-          borderRadius: '12px',
-          padding: '60px 40px',
-          textAlign: 'center',
-          border: '1px solid #3d3a37',
-        }}>
-          <div style={{
-            fontSize: '4em',
-            marginBottom: '20px',
-            opacity: 0.6,
-          }}>
-            🎯
-          </div>
-          <h2 style={{ margin: '0 0 16px 0', color: '#ffffff', fontSize: '1.8em' }}>
-            Practice Mode Coming Soon
-          </h2>
-          <p style={{ color: '#989795', fontSize: '1.1em', maxWidth: '500px', margin: '0 auto 24px' }}>
-            Train on positions where you've blundered before.
-            Fix your blindspots with targeted puzzles from your own games.
-          </p>
-          <div style={{
-            display: 'flex',
-            justifyContent: 'center',
-            gap: '16px',
-            flexWrap: 'wrap',
-          }}>
-            {['Your Blunders', 'Spaced Repetition', 'Focus Mode', 'Progress Tracking'].map((feature) => (
-              <span key={feature} style={{
-                padding: '8px 16px',
-                backgroundColor: '#272522',
-                borderRadius: '20px',
-                fontSize: '0.9em',
-                color: '#81b64c',
-                border: '1px solid #3d3a37',
-              }}>
-                {feature}
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-      </div>
-
-      {/* Footer */}
-      <footer style={{
-        textAlign: 'center',
-        padding: '24px 20px',
-        borderTop: '1px solid #3d3a37',
-        marginTop: '40px',
-        color: '#989795',
-        fontSize: '0.85em',
-      }}>
-        <a
-          href="https://github.com/Goodluck07/ChessBlindspots"
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            color: '#81b64c',
-            textDecoration: 'none',
-          }}
-        >
-          View on GitHub
-        </a>
-        <span style={{ margin: '0 12px' }}>|</span>
-        <span>Built with Stockfish + React</span>
-      </footer>
-    </>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route
+        path="/analyze"
+        element={
+          <AnalyzePage
+            allBlunders={allBlunders}
+            filteredBlunders={filteredBlunders}
+            displayBlunders={displayBlunders}
+            blundersByGame={blundersByGame}
+            loading={loading}
+            error={error}
+            progress={progress}
+            gamesAnalyzed={gamesAnalyzed}
+            timeClassFilter={timeClassFilter}
+            viewMode={viewMode}
+            TIME_CLASS_LABELS={TIME_CLASS_LABELS}
+            onAnalyzeGames={analyzeGames}
+            onSetTimeClassFilter={setTimeClassFilter}
+            onSetViewMode={setViewMode}
+          />
+        }
+      />
+      <Route
+        path="/insights"
+        element={
+          <InsightsPage
+            blunders={filteredBlunders}
+            gamesAnalyzed={gamesAnalyzed}
+            cachedAnalyses={getAllCached()}
+            onLoadCache={restoreFromCache}
+          />
+        }
+      />
+      <Route path="/practice" element={<PracticePage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   );
 }
 
-async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]> {
+async function analyzeGame(
+  game: ChessGame,
+  username: string,
+): Promise<Blunder[]> {
   const blunders: Blunder[] = [];
   const chess = new Chess();
 
   // Determine which color the user played
-  const playerColor: 'white' | 'black' =
-    game.white.toLowerCase() === username.toLowerCase() ? 'white' : 'black';
+  const playerColor: "white" | "black" =
+    game.white.toLowerCase() === username.toLowerCase() ? "white" : "black";
 
   // Get opponent name
-  const opponent = playerColor === 'white' ? game.black : game.white;
+  const opponent = playerColor === "white" ? game.black : game.white;
 
   // Parse game result from PGN
   const resultMatch = game.pgn.match(/\[Result "([^"]+)"\]/);
-  const resultStr = resultMatch ? resultMatch[1] : '*';
+  const resultStr = resultMatch ? resultMatch[1] : "*";
 
   // Extract opening name from PGN headers
   const openingMatch = game.pgn.match(/\[Opening "([^"]+)"\]/);
   const ecoMatch = game.pgn.match(/\[ECO "([^"]+)"\]/);
-  const opening = openingMatch ? openingMatch[1] : ecoMatch ? ecoMatch[1] : undefined;
-  let gameResult: 'win' | 'loss' | 'draw' = 'draw';
-  if (resultStr === '1-0') {
-    gameResult = playerColor === 'white' ? 'win' : 'loss';
-  } else if (resultStr === '0-1') {
-    gameResult = playerColor === 'black' ? 'win' : 'loss';
+  const opening = openingMatch
+    ? openingMatch[1]
+    : ecoMatch
+      ? ecoMatch[1]
+      : undefined;
+  let gameResult: "win" | "loss" | "draw" = "draw";
+  if (resultStr === "1-0") {
+    gameResult = playerColor === "white" ? "win" : "loss";
+  } else if (resultStr === "0-1") {
+    gameResult = playerColor === "black" ? "win" : "loss";
   }
 
   try {
@@ -715,8 +302,8 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
   for (const move of moves) {
     moveNumber++;
     const isPlayerMove =
-      (playerColor === 'white' && moveNumber % 2 === 1) ||
-      (playerColor === 'black' && moveNumber % 2 === 0);
+      (playerColor === "white" && moveNumber % 2 === 1) ||
+      (playerColor === "black" && moveNumber % 2 === 0);
 
     // Get position before the move
     const fenBefore = chess.fen();
@@ -750,10 +337,11 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
         const bestResult = await evaluatePosition(fenBefore, ANALYSIS_DEPTH);
 
         // Skip if Stockfish returned no valid best move (e.g. checkmate, timeout)
-        const isValidMove = bestResult.bestMove &&
+        const isValidMove =
+          bestResult.bestMove &&
           bestResult.bestMove.length >= 4 &&
-          bestResult.bestMove !== '(none)' &&
-          bestResult.bestMove !== 'timeout';
+          bestResult.bestMove !== "(none)" &&
+          bestResult.bestMove !== "timeout";
         if (!isValidMove) {
           prevEval = currentEval;
           continue;
@@ -764,25 +352,26 @@ async function analyzeGame(game: ChessGame, username: string): Promise<Blunder[]
         const bestMoveTo = bestResult.bestMove.slice(2, 4);
 
         // Determine piece moved from SAN
-        const pieceMoved = move.san.match(/^[KQRBN]/) ? move.san[0] : 'P';
+        const pieceMoved = move.san.match(/^[KQRBN]/) ? move.san[0] : "P";
 
         // Check if move was a capture
-        const wasCapture = move.san.includes('x');
+        const wasCapture = move.san.includes("x");
 
         // Check if best move was a capture (has ENEMY piece on destination square)
         const tempChess = new Chess(fenBefore);
-        const destSquare = bestMoveTo as import('chess.js').Square;
+        const destSquare = bestMoveTo as import("chess.js").Square;
         const pieceOnDest = tempChess.get(destSquare);
-        const playerColorChar = playerColor === 'white' ? 'w' : 'b';
-        const bestMoveWasCapture = pieceOnDest != null && pieceOnDest.color !== playerColorChar;
+        const playerColorChar = playerColor === "white" ? "w" : "b";
+        const bestMoveWasCapture =
+          pieceOnDest != null && pieceOnDest.color !== playerColorChar;
 
         // Determine game phase based on move number and material
-        let gamePhase: 'opening' | 'middlegame' | 'endgame' = 'middlegame';
+        let gamePhase: "opening" | "middlegame" | "endgame" = "middlegame";
         const fullMoveNum = Math.ceil(moveNumber / 2);
         if (fullMoveNum <= 10) {
-          gamePhase = 'opening';
+          gamePhase = "opening";
         } else if (fullMoveNum >= 40) {
-          gamePhase = 'endgame';
+          gamePhase = "endgame";
         }
 
         blunders.push({
