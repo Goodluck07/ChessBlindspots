@@ -163,7 +163,7 @@ export function Blunders({ blunders, gamesAnalyzed }: BlundersProps) {
       <BlundersByColor byColor={byColor} total={total} />
 
       {/* Opening names */}
-      <BlunderOpeningsSection topOpenings={topOpenings} total={total} />
+      <BlunderOpeningsSection topOpenings={topOpenings} total={total} blunders={blunders} />
 
       {/* Worst blunder + View button */}
       <WorstBlunderSection worstBlunder={worstBlunder} worstDrop={worstDrop} />
