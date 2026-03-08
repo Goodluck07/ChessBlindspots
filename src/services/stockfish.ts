@@ -58,7 +58,7 @@ class StockfishEngine {
       const handler = (message: string) => {
         // Parse score from info string
         if (message.startsWith('info') && message.includes('score')) {
-          const scoreMatch = message.match(/score (cp|mate) (-?\d+)/);
+          const scoreMatch = /score (cp|mate) (-?\d+)/.exec(message);
           if (scoreMatch) {
             if (scoreMatch[1] === 'cp') {
               score = parseInt(scoreMatch[2], 10);
@@ -76,7 +76,7 @@ class StockfishEngine {
           resolved = true;
           clearTimeout(timeout);
 
-          const moveMatch = message.match(/bestmove (\S+)/);
+          const moveMatch = /bestmove (\S+)/.exec(message);
           if (moveMatch) {
             bestMove = moveMatch[1];
           }

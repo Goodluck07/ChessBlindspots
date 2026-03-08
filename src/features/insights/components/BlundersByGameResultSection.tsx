@@ -13,7 +13,7 @@ interface BlundersByGameResultSectionProps {
 export function BlundersByGameResultSection({
   byResult,
   total,
-}: BlundersByGameResultSectionProps) {
+}: Readonly<BlundersByGameResultSectionProps>) {
   return (
     <Section title="Blunders by Game Result">
       <BarRow

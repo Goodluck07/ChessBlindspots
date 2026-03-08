@@ -10,7 +10,7 @@ export function NoFilterResults({
   allBlunders,
   filteredBlunders,
   timeClassFilter,
-}: NoFilterResultsProps) {
+}: Readonly<NoFilterResultsProps>) {
   return (
     <>
       {allBlunders.length > 0 && filteredBlunders.length === 0 && (

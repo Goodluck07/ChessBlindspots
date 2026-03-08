@@ -21,7 +21,7 @@ export function ResultsSection({
   blundersByGame,
   gamesAnalyzed,
   displayBlunders,
-}: ResultsSectionProps) {
+}: Readonly<ResultsSectionProps>) {
   return (
     <>
       {filteredBlunders.length > 0 && (

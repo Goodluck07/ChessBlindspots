@@ -17,7 +17,7 @@ interface BlundersProps {
   gamesAnalyzed: number;
 }
 
-export function Blunders({ blunders, gamesAnalyzed }: BlundersProps) {
+export function Blunders({ blunders, gamesAnalyzed }: Readonly<BlundersProps>) {
   // ── Stats ────────────────────────────────────────────────────
   const total = blunders.length;
   const byPhase = { opening: 0, middlegame: 0, endgame: 0 };

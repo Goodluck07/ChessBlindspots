@@ -5,16 +5,13 @@ interface UsernameFormProps {
   loading: boolean;
 }
 
-export function UsernameForm({ onSubmit, loading }: UsernameFormProps) {
-  const [username, setUsername] = useState(
-    () => localStorage.getItem("chessblinds_last_username") || "",
-  );
+export function UsernameForm({ onSubmit, loading }: Readonly<UsernameFormProps>) {
+  const [username, setUsername] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
 
   const handleSubmit = (e: React.SubmitEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (username.trim() && !loading) {
-      localStorage.setItem("chessblinds_last_username", username.trim());
       onSubmit(username.trim());
     }
   };

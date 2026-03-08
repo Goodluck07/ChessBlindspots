@@ -20,7 +20,7 @@ export function BlunderStatsSection({
   worstPiece,
   phaseLabel,
   pieceNames,
-}: BlunderStatsSectionProps) {
+}: Readonly<BlunderStatsSectionProps>) {
   return (
     <section className="grid grid-cols-[repeat(auto-fit,minmax(155px,1fr))] gap-3">
       <StatCard label="Total Blunders" value={String(total)} color="#fa412d" />

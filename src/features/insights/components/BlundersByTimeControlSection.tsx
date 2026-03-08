@@ -12,7 +12,7 @@ export function BlundersByTimeControlSection({
   byTimeClass,
   total,
   activeTimeClasses,
-}: BlundersByTimeControlSectionProps) {
+}: Readonly<BlundersByTimeControlSectionProps>) {
   const timeClassLabels: Record<TimeClass, string> = {
     bullet: "Bullet",
     blitz: "Blitz",
