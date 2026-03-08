@@ -6,7 +6,7 @@ interface SectionProps {
 export function Section({ title, children }: Readonly<SectionProps>) {
   return (
     <section className="bg-[#1e1c1a] border border-[#3d3a37] rounded-xl p-6">
-      <h3 className="m-0 mb-5 text-white text-base font-semibold uppercase tracking-[0.5px]">
+      <h3 className="m-0 mb-5 text-white text-base font-semibold uppercase tracking-[0.5px] pl-3 border-l-2 border-l-[#81b64c]">
         {title}
       </h3>
       {children}

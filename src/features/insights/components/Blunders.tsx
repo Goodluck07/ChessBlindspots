@@ -38,9 +38,11 @@ export function Blunders({ blunders, gamesAnalyzed }: Readonly<BlundersProps>) {
   const worstPiece = Object.entries(byPiece).sort((a, b) => b[1] - a[1])[0];
   const byResult = { win: 0, loss: 0, draw: 0 };
   blunders.forEach((b) => byResult[b.gameResult]++);
-  const avgDrop = blunders.reduce((s, b) => s + b.evalDrop, 0) / total / 100;
+  // Cap mate scores at 15 pawns (1500cp) so they don't skew the average
+  const avgDrop = blunders.reduce((s, b) => s + Math.min(b.evalDrop, 1500), 0) / total / 100;
   const worstBlunder = [...blunders].sort((a, b) => b.evalDrop - a.evalDrop)[0];
   const worstDrop = worstBlunder.evalDrop / 100;
+  const worstDropDisplay = worstDrop > 50 ? "Missed #" : worstDrop.toFixed(1);
   const missedCaptures = blunders.filter(
     (b) => b.bestMoveWasCapture && !b.wasCapture,
   ).length;
@@ -98,11 +100,41 @@ export function Blunders({ blunders, gamesAnalyzed }: Readonly<BlundersProps>) {
   return (
     <div className="fade-in flex flex-col gap-5">
       <section>
-        <h1 className="m-0 mb-1 text-white text-[1.6em]">Insights</h1>
-        <p className="m-0 text-[#989795] text-sm">
-          Based on {total} blunder{total !== 1 ? "s" : ""} across{" "}
-          {gamesAnalyzed} game{gamesAnalyzed !== 1 ? "s" : ""}
-        </p>
+        <div className="mb-5">
+          <h1 className="m-0 mb-1 text-white text-[1.6em]">Insights</h1>
+          <p className="m-0 text-[#989795] text-sm">
+            Based on {total} blunder{total !== 1 ? "s" : ""} across{" "}
+            {gamesAnalyzed} game{gamesAnalyzed !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Hero stat row */}
+        <div className="grid grid-cols-3 gap-0 bg-[#1e1c1a] border border-[#3d3a37] rounded-xl overflow-hidden">
+          <div className="text-center py-5 px-4">
+            <div className="text-[2.4em] font-extrabold text-red-500 leading-none">
+              {total}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Total Blunders
+            </div>
+          </div>
+          <div className="text-center py-5 px-4 border-x border-[#3d3a37]">
+            <div className="text-[2.4em] font-extrabold text-yellow-500 leading-none">
+              {avgDrop.toFixed(1)}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Avg Drop (pawns)
+            </div>
+          </div>
+          <div className="text-center py-5 px-4">
+            <div className="text-[2.4em] font-extrabold text-orange-400 leading-none">
+              {worstDropDisplay}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Worst Drop
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Stat cards */}

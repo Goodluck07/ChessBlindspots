@@ -2,7 +2,13 @@ import { Button } from "../../../components/ui/Button";
 
 export function HeroSection() {
   return (
-    <section className="pt-25 px-5 pb-20 text-center bg-linear-to-b from-[rgba(129,182,76,0.06)] to-transparent border-b border-[#3d3a37]">
+    <section
+      className="pt-25 px-5 pb-20 text-center border-b border-[#3d3a37] relative overflow-hidden"
+      style={{
+        background:
+          "radial-gradient(ellipse at 50% -5%, rgba(129,182,76,0.2) 0%, rgba(129,182,76,0.07) 40%, transparent 70%)",
+      }}
+    >
       <div className="max-w-2xl mx-auto">
         <div className="inline-block bg-[rgba(129,182,76,0.12)] text-green-600 border border-[rgba(129,182,76,0.3)] rounded-full px-4 py-1 text-[13px] font-semibold tracking-wide uppercase mb-7">
           Powered by Stockfish

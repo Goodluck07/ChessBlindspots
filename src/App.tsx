@@ -259,6 +259,10 @@ async function createBlunderIfValid(
 
   if (!isValidMove) return null;
 
+  // If the player already played the best move, don't flag as a blunder
+  // (the position was already losing — any move would drop eval)
+  if (bestResult.bestMove.slice(0, 4) === move.from + move.to) return null;
+
   const bestMoveFrom = bestResult.bestMove.slice(0, 2);
   const bestMoveTo = bestResult.bestMove.slice(2, 4);
   const pieceMoved = /^[KQRBN]/.exec(move.san) ? move.san[0] : "P";

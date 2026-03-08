@@ -7,6 +7,7 @@ interface PuzzleBoardProps {
   blunder: Blunder;
   puzzleNumber: number;
   totalPuzzles: number;
+  streak: number;
   isRetry?: boolean;
   onCorrect: () => void;
   onWrong: () => void;
@@ -38,10 +39,77 @@ const BOARD_GLOW: Record<PuzzleState, string> = {
   revealed: "0 0 0 2px rgba(129,182,76,0.5), 0 0 24px rgba(129,182,76,0.15)",
 };
 
+function getPieceOnSquare(fen: string, square: string): string | null {
+  const pieceNames: Record<string, string> = {
+    k: "King", q: "Queen", r: "Rook", b: "Bishop", n: "Knight", p: "Pawn",
+    K: "King", Q: "Queen", R: "Rook", B: "Bishop", N: "Knight", P: "Pawn",
+  };
+  const file = square.charCodeAt(0) - "a".charCodeAt(0);
+  const rank = parseInt(square[1]) - 1;
+  if (rank < 0 || rank > 7 || file < 0 || file > 7) return null;
+  const row = fen.split(" ")[0].split("/").reverse()[rank];
+  let col = 0;
+  for (const char of row) {
+    if (/\d/.test(char)) {
+      col += parseInt(char);
+    } else {
+      if (col === file) return pieceNames[char] ?? null;
+      col++;
+    }
+  }
+  return null;
+}
+
+function evalToMaterial(centipawns: number): string {
+  const pawns = Math.abs(centipawns) / 100;
+  if (pawns >= 8) return "a Queen";
+  if (pawns >= 4.5) return "a Rook";
+  if (pawns >= 2.5) return "a piece";
+  if (pawns >= 1.5) return "a pawn";
+  return "an advantage";
+}
+
+function getExplanation(blunder: Blunder): string {
+  const pieceName = PIECE_NAMES[blunder.pieceMoved] ?? "piece";
+  const bestMovePiece = getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) ?? "piece";
+  const targetPiece = getPieceOnSquare(blunder.fen, blunder.bestMoveTo);
+  const afterPawns = blunder.evalAfter / 100;
+  const evalSwing = Math.abs(blunder.evalDrop / 100);
+
+  if (blunder.evalDrop > 5000) {
+    return `You had a forced checkmate! Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have delivered the winning sequence.`;
+  }
+  if (Math.abs(afterPawns) > 50) {
+    return `Moving your ${pieceName} to ${blunder.moveTo} opened a checkmate for your opponent. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have blocked the threat and kept you in the game.`;
+  }
+  if (blunder.bestMoveWasCapture && !blunder.wasCapture && targetPiece) {
+    return `The best move was to capture the ${targetPiece} on ${blunder.bestMoveTo} with your ${bestMovePiece}. Instead, your ${pieceName} moved to ${blunder.moveTo}, missing that opportunity.`;
+  }
+  if (blunder.wasCapture && evalSwing > 3) {
+    const capturedPiece = getPieceOnSquare(blunder.fen, blunder.moveTo);
+    const capturedDesc = capturedPiece ? `the ${capturedPiece}` : "that piece";
+    return `Your ${pieceName} captured ${capturedDesc} on ${blunder.moveTo}, but it was defended. Your opponent recaptures and wins material. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was safer.`;
+  }
+  if (evalSwing > 5) {
+    return `Moving your ${pieceName} to ${blunder.moveTo} left a piece undefended. Playing the ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have kept your pieces protected, saving you ${evalToMaterial(blunder.evalDrop)}.`;
+  }
+  if (evalSwing > 3) {
+    return `Your ${pieceName} move to ${blunder.moveTo} allowed your opponent a strong tactical reply. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} avoids this and maintains your position.`;
+  }
+  if (blunder.gamePhase === "opening") {
+    return `Your ${pieceName} move to ${blunder.moveTo} wastes time in the opening. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} develops more efficiently or fights for the center.`;
+  }
+  if (blunder.gamePhase === "endgame") {
+    return `In this endgame, your ${pieceName} on ${blunder.moveTo} is passive. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} is more active and gives better control.`;
+  }
+  return `Your ${pieceName} move to ${blunder.moveTo} gave away ${evalToMaterial(blunder.evalDrop)}. The ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was the stronger continuation.`;
+}
+
 export function PuzzleBoard({
   blunder,
   puzzleNumber,
   totalPuzzles,
+  streak,
   isRetry = false,
   onCorrect,
   onWrong,
@@ -62,13 +130,7 @@ export function PuzzleBoard({
     setWrongAttempt(null);
   }, [blunder]);
 
-  useEffect(() => {
-    if (puzzleState === "correct") {
-      const t = setTimeout(() => onCorrect(), 1500);
-      return () => clearTimeout(t);
-    }
-  }, [puzzleState, onCorrect]);
-
+  // Auto-transition from wrong → revealed
   useEffect(() => {
     if (puzzleState === "wrong") {
       const t = setTimeout(() => {
@@ -79,9 +141,23 @@ export function PuzzleBoard({
     }
   }, [puzzleState]);
 
-  // pieceType is "wR", "bR" etc. — first char is color
+  // Post-move FEN — the position after the best move is played
+  const resultFen = useMemo(() => {
+    try {
+      const chess = new Chess(blunder.fen);
+      chess.move({
+        from: blunder.bestMoveFrom as Square,
+        to: blunder.bestMoveTo as Square,
+        promotion: "q",
+      });
+      return chess.fen();
+    } catch {
+      return blunder.fen;
+    }
+  }, [blunder]);
+
   const isPlayerPiece = (pieceType: string) => {
-    const isWhite = pieceType[0] === "w";
+    const isWhite = pieceType.startsWith("w");
     return blunder.playerColor === "white" ? isWhite : !isWhite;
   };
 
@@ -124,8 +200,6 @@ export function PuzzleBoard({
     }
   };
 
-  // Primary click handler — fires for both piece squares and empty squares,
-  // including touch events (onPieceClick does not fire on mobile).
   const handleSquareClick = ({
     piece,
     square,
@@ -157,7 +231,6 @@ export function PuzzleBoard({
     }
   };
 
-  // Legal destinations for the selected piece — used for move dots
   const legalDestinations = useMemo<Set<string>>(() => {
     if (!selectedSquare || puzzleState !== "waiting") return new Set();
     const chess = new Chess(blunder.fen);
@@ -165,7 +238,6 @@ export function PuzzleBoard({
     return new Set(moves.map((m) => m.to));
   }, [selectedSquare, puzzleState, blunder.fen]);
 
-  // Current board position map for deciding dot vs ring on capture squares
   const currentPosition = useMemo(() => {
     const chess = new Chess(blunder.fen);
     return chess.board().flat().reduce<Record<string, true>>((acc, sq) => {
@@ -175,10 +247,10 @@ export function PuzzleBoard({
   }, [blunder.fen]);
 
   const squareStyles: Record<string, React.CSSProperties> = (() => {
-    if (puzzleState === "correct") {
+    // After solving — show the landing square highlighted on result position
+    if (puzzleState === "correct" || puzzleState === "revealed") {
       return {
-        [blunder.bestMoveFrom]: { backgroundColor: "rgba(129, 182, 76, 0.85)" },
-        [blunder.bestMoveTo]: { backgroundColor: "rgba(129, 182, 76, 0.85)" },
+        [blunder.bestMoveTo]: { backgroundColor: "rgba(129, 182, 76, 0.7)" },
       };
     }
     if (puzzleState === "wrong" && wrongAttempt) {
@@ -187,31 +259,20 @@ export function PuzzleBoard({
         [wrongAttempt.to]: { backgroundColor: "rgba(250, 65, 45, 0.65)" },
       };
     }
-    if (puzzleState === "revealed") {
-      return {
-        [blunder.bestMoveFrom]: { backgroundColor: "rgba(129, 182, 76, 0.6)" },
-        [blunder.bestMoveTo]: { backgroundColor: "rgba(129, 182, 76, 0.6)" },
-      };
-    }
     const styles: Record<string, React.CSSProperties> = {};
     if (hintLevel >= 1) {
       styles[blunder.bestMoveFrom] = { backgroundColor: "rgba(129, 182, 76, 0.45)" };
     }
     if (selectedSquare) {
       styles[selectedSquare] = { backgroundColor: "rgba(247, 216, 96, 0.75)" };
-      // Legal move dots
       for (const sq of legalDestinations) {
         if (currentPosition[sq]) {
-          // Capture square — ring
           styles[sq] = {
-            background:
-              "radial-gradient(circle, transparent 58%, rgba(0,0,0,0.28) 60%)",
+            background: "radial-gradient(circle, transparent 58%, rgba(0,0,0,0.28) 60%)",
           };
         } else {
-          // Empty square — dot
           styles[sq] = {
-            background:
-              "radial-gradient(circle, rgba(0,0,0,0.28) 24%, transparent 26%)",
+            background: "radial-gradient(circle, rgba(0,0,0,0.28) 24%, transparent 26%)",
           };
         }
       }
@@ -219,11 +280,13 @@ export function PuzzleBoard({
     return styles;
   })();
 
-  const arrows =
+  // Show result position after correct/revealed so the user sees the piece landed
+  const boardPosition =
     puzzleState === "correct" || puzzleState === "revealed"
-      ? [{ startSquare: blunder.bestMoveFrom, endSquare: blunder.bestMoveTo, color: "#5b9a32" }]
-      : [];
+      ? resultFen
+      : blunder.fen;
 
+  const explanation = getExplanation(blunder);
   const severity = getSeverityLabel(blunder.evalDrop);
   const progress = Math.round(((puzzleNumber - 1) / totalPuzzles) * 100);
   const isSample = blunder.gameUrl === "#";
@@ -247,17 +310,33 @@ export function PuzzleBoard({
           <span className="text-[#5a5856] text-xs uppercase tracking-wider capitalize">
             {blunder.gamePhase} · move {blunder.moveNumber}
           </span>
+          {blunder.opening && (
+            <span
+              className="px-2 py-0.5 rounded-md text-xs text-[#81b64c] border border-[#81b64c30] truncate max-w-[180px]"
+              style={{ background: "#81b64c18" }}
+              title={blunder.opening}
+            >
+              {blunder.opening}
+            </span>
+          )}
           {isRetry && (
             <span className="px-2 py-0.5 rounded-md text-xs bg-[#272522] text-[#6b6864] border border-[#3d3a37]">
               Retry
             </span>
           )}
         </div>
-        <span className="text-[#5a5856] text-sm font-mono tabular-nums">
-          {puzzleNumber}
-          <span className="text-[#3d3a37]"> / </span>
-          {totalPuzzles}
-        </span>
+        <div className="flex items-center gap-3">
+          {streak >= 2 && (
+            <span className="text-[#e6a23c] text-xs font-semibold tabular-nums">
+              🔥 {streak}
+            </span>
+          )}
+          <span className="text-[#5a5856] text-sm font-mono tabular-nums">
+            {puzzleNumber}
+            <span className="text-[#3d3a37]"> / </span>
+            {totalPuzzles}
+          </span>
+        </div>
       </div>
 
       {/* ── Progress bar ── */}
@@ -302,7 +381,7 @@ export function PuzzleBoard({
           >
             <Chessboard
               options={{
-                position: blunder.fen,
+                position: boardPosition,
                 boardOrientation: blunder.playerColor,
                 allowDragging: puzzleState === "waiting",
                 canDragPiece: ({ piece }) => isPlayerPiece(piece.pieceType),
@@ -313,7 +392,7 @@ export function PuzzleBoard({
                 onPieceClick: handlePieceClick,
                 onSquareClick: handleSquareClick,
                 squareStyles,
-                arrows,
+                arrows: [],
                 darkSquareStyle: { backgroundColor: "#779556" },
                 lightSquareStyle: { backgroundColor: "#ebecd0" },
               }}
@@ -385,8 +464,11 @@ export function PuzzleBoard({
               <p className="text-[#81b64c] text-base font-bold m-0 mb-1">
                 ✓ Correct!
               </p>
-              <p className="text-[#6b9a48] text-xs m-0 font-mono">
+              <p className="text-[#6b9a48] text-xs font-mono m-0 mb-3">
                 {blunder.bestMoveFrom} → {blunder.bestMoveTo}
+              </p>
+              <p className="text-[#989795] text-xs leading-relaxed m-0">
+                {explanation}
               </p>
             </div>
           )}
@@ -402,9 +484,12 @@ export function PuzzleBoard({
               <p className="text-[#fa412d] text-base font-bold m-0 mb-1">
                 ✗ Not quite
               </p>
-              <p className="text-[#8a4040] text-xs m-0">
-                Showing the best move…
-              </p>
+              {wrongAttempt && (
+                <p className="text-[#8a4040] text-xs m-0">
+                  {wrongAttempt.from} → {wrongAttempt.to} wasn't the best.
+                  Showing the correct move…
+                </p>
+              )}
             </div>
           )}
 
@@ -419,8 +504,11 @@ export function PuzzleBoard({
               <p className="text-[#81b64c] text-xs font-semibold uppercase tracking-wider m-0 mb-2">
                 Best move
               </p>
-              <p className="text-[#bababa] text-base font-mono font-semibold m-0 mb-1">
+              <p className="text-[#bababa] text-base font-mono font-semibold m-0 mb-3">
                 {blunder.bestMoveFrom} → {blunder.bestMoveTo}
+              </p>
+              <p className="text-[#989795] text-xs leading-relaxed m-0 mb-2">
+                {explanation}
               </p>
               <p className="text-[#5a5856] text-xs m-0">
                 Added to retry queue.
@@ -475,9 +563,9 @@ export function PuzzleBoard({
                 Skip
               </button>
             )}
-            {puzzleState === "revealed" && (
+            {(puzzleState === "correct" || puzzleState === "revealed") && (
               <button
-                onClick={onWrong}
+                onClick={puzzleState === "correct" ? onCorrect : onWrong}
                 className="px-5 py-2.5 rounded-xl text-sm font-semibold border transition-all cursor-pointer"
                 style={{
                   color: "#bababa",

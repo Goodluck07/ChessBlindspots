@@ -27,17 +27,29 @@ export function ResultsSection({
       {filteredBlunders.length > 0 && (
         <section>
           {/* Results Header with Controls */}
-          <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
-            <h2 className="m-0">
-              {viewMode === "overall"
-                ? "Your Worst Blunders"
-                : "Blunders By Game"}
-              {timeClassFilter !== "all" && (
-                <span className="text-sm text-green-600 ml-3 font-normal">
-                  {timeClassFilter} only
+          <div className="flex justify-between items-start mb-6 flex-wrap gap-4">
+            <div>
+              <h2 className="m-0">
+                {viewMode === "overall"
+                  ? "Your Worst Blunders"
+                  : "Blunders By Game"}
+                {timeClassFilter !== "all" && (
+                  <span className="text-sm text-green-600 ml-3 font-normal">
+                    {timeClassFilter} only
+                  </span>
+                )}
+              </h2>
+              <p className="m-0 mt-1 text-[#989795] text-sm">
+                Found{" "}
+                <span className="text-white font-semibold">
+                  {filteredBlunders.length} blunder{filteredBlunders.length === 1 ? "" : "s"}
+                </span>{" "}
+                across{" "}
+                <span className="text-white font-semibold">
+                  {gamesAnalyzed} game{gamesAnalyzed === 1 ? "" : "s"}
                 </span>
-              )}
-            </h2>
+              </p>
+            </div>
 
             {/* View Toggle */}
             <div className="flex bg-[#272522] rounded-lg p-1 border border-[#3d3a37]">
@@ -87,10 +99,12 @@ export function ResultsSection({
                 Worst Drop
               </div>
               <div className="text-yellow-500 text-[28px] font-bold leading-none">
-                {Math.abs(filteredBlunders[0]?.evalDrop / 100 || 0).toFixed(1)}
-                <span className="text-[0.5em] font-medium ml-1 text-[#989795]">
-                  pawns
-                </span>
+                {(() => {
+                  const drop = filteredBlunders[0]?.evalDrop / 100 || 0;
+                  return drop > 50 ? "Missed #" : (
+                    <>{drop.toFixed(1)}<span className="text-[0.5em] font-medium ml-1 text-[#989795]">pawns</span></>
+                  );
+                })()}
               </div>
             </div>
           </div>
