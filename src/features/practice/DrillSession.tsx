@@ -30,6 +30,7 @@ export function DrillSessionView() {
     skipped: 0,
   });
   const [retriedSet, setRetriedSet] = useState(new Set<string>());
+  const [missedBlunders, setMissedBlunders] = useState<Blunder[]>([]);
   const [isDone, setIsDone] = useState(false);
   const [streak, setStreak] = useState(0);
 
@@ -57,6 +58,7 @@ export function DrillSessionView() {
     if (!retriedSet.has(blunderKey)) {
       setRetriedSet((prev) => new Set([...prev, blunderKey]));
       setQueue((prev) => [...prev, currentBlunder]);
+      setMissedBlunders((prev) => [...prev, currentBlunder]);
     }
     setStats((s) => ({ ...s, wrong: s.wrong + 1 }));
     setStreak(0);
@@ -78,7 +80,11 @@ export function DrillSessionView() {
         wrong={stats.wrong}
         skipped={stats.skipped}
         total={initialQueueLength}
+        missedBlunders={missedBlunders}
         onReset={() => navigate("/practice")}
+        onDrillMisses={() =>
+          navigate("/drill", { state: { queue: missedBlunders } })
+        }
       />
     );
   }
