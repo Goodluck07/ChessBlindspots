@@ -95,6 +95,16 @@ function formatUciMove(uci: string): string {
   return `${from} → ${to}`;
 }
 
+// Converts centipawn loss to a human-readable material description
+function evalToMaterial(centipawns: number): string {
+  const pawns = Math.abs(centipawns) / 100;
+  if (pawns >= 8) return "a Queen";
+  if (pawns >= 4.5) return "a Rook";
+  if (pawns >= 2.5) return "a piece";
+  if (pawns >= 1.5) return "a pawn";
+  return "an advantage";
+}
+
 function getSeverityTint(evalDrop: number): string {
   const pawns = evalDrop / 100;
   if (pawns >= 6) return "rgba(220, 38, 38, 0.07)";
@@ -160,12 +170,18 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
       getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) || "piece";
     const targetPiece = getPieceOnSquare(blunder.fen, blunder.bestMoveTo);
 
+    // Missed checkmate — pre-blunder eval was a mate score
+    if (blunder.evalDrop > 5000) {
+      return `You had a forced checkmate but missed it. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have delivered the winning sequence.`;
+    }
+
+    // Post-blunder position is a forced mate for opponent
     if (Math.abs(afterPawns) > 50) {
       return `Moving your ${pieceName} from ${blunder.moveFrom} to ${blunder.moveTo} opened a checkmate for your opponent. Moving your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} instead would have blocked the threat and kept you in the game.`;
     }
 
     if (blunder.bestMoveWasCapture && !blunder.wasCapture && targetPiece) {
-      return `There was a free ${targetPiece} on ${blunder.bestMoveTo} you could have captured with your ${bestMovePiece} from ${blunder.bestMoveFrom}. Instead, your ${pieceName} move to ${blunder.moveTo} let that opportunity slip, costing ${evalSwing.toFixed(1)} pawns.`;
+      return `The best move was to capture the ${targetPiece} on ${blunder.bestMoveTo} with your ${bestMovePiece} from ${blunder.bestMoveFrom}. Instead, your ${pieceName} moved to ${blunder.moveTo}, missing that opportunity.`;
     }
 
     if (blunder.wasCapture && evalSwing > 3) {
@@ -177,7 +193,7 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
     }
 
     if (evalSwing > 5) {
-      return `Moving your ${pieceName} to ${blunder.moveTo} left another piece undefended. Playing your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have kept your pieces protected, saving ${evalSwing.toFixed(1)} pawns.`;
+      return `Moving your ${pieceName} to ${blunder.moveTo} left another piece undefended. Playing your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} would have kept your pieces protected, saving you ${evalToMaterial(blunder.evalDrop)}.`;
     }
 
     if (evalSwing > 3) {
@@ -192,7 +208,7 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
       return `In this endgame, your ${pieceName} on ${blunder.moveTo} is passive. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} is more active and gives your pieces better control.`;
     }
 
-    return `Your ${pieceName} move from ${blunder.moveFrom} to ${blunder.moveTo} gave away ${evalSwing.toFixed(1)} pawns. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was the stronger continuation.`;
+    return `Your ${pieceName} move from ${blunder.moveFrom} to ${blunder.moveTo} gave away ${evalToMaterial(blunder.evalDrop)}. Your ${bestMovePiece} from ${blunder.bestMoveFrom} to ${blunder.bestMoveTo} was the stronger continuation.`;
   };
 
   const outcomeMessage = getOutcomeMessage();
@@ -257,7 +273,7 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
           >
             {severity.label}
             <span className="opacity-80 text-sm">
-              -{(blunder.evalDrop / 100).toFixed(1)}
+              {blunder.evalDrop > 5000 ? "−M" : `−${(blunder.evalDrop / 100).toFixed(1)}`}
             </span>
           </span>
           <span className="text-[#bababa] font-medium whitespace-nowrap">

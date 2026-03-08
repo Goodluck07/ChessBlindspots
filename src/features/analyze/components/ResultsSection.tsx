@@ -99,10 +99,12 @@ export function ResultsSection({
                 Worst Drop
               </div>
               <div className="text-yellow-500 text-[28px] font-bold leading-none">
-                {Math.abs(filteredBlunders[0]?.evalDrop / 100 || 0).toFixed(1)}
-                <span className="text-[0.5em] font-medium ml-1 text-[#989795]">
-                  pawns
-                </span>
+                {(() => {
+                  const drop = filteredBlunders[0]?.evalDrop / 100 || 0;
+                  return drop > 50 ? "Missed #" : (
+                    <>{drop.toFixed(1)}<span className="text-[0.5em] font-medium ml-1 text-[#989795]">pawns</span></>
+                  );
+                })()}
               </div>
             </div>
           </div>
