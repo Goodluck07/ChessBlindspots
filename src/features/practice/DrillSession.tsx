@@ -31,6 +31,7 @@ export function DrillSessionView() {
   });
   const [retriedSet, setRetriedSet] = useState(new Set<string>());
   const [isDone, setIsDone] = useState(false);
+  const [streak, setStreak] = useState(0);
 
   const currentBlunder = queue[currentIndex];
   const blunderKey = currentBlunder
@@ -48,6 +49,7 @@ export function DrillSessionView() {
 
   const handleCorrect = () => {
     setStats((s) => ({ ...s, correct: s.correct + 1 }));
+    setStreak((s) => s + 1);
     advance();
   };
 
@@ -57,11 +59,13 @@ export function DrillSessionView() {
       setQueue((prev) => [...prev, currentBlunder]);
     }
     setStats((s) => ({ ...s, wrong: s.wrong + 1 }));
+    setStreak(0);
     advance();
   };
 
   const handleSkip = () => {
     setStats((s) => ({ ...s, skipped: s.skipped + 1 }));
+    setStreak(0);
     advance();
   };
 
@@ -86,6 +90,7 @@ export function DrillSessionView() {
           blunder={currentBlunder}
           puzzleNumber={currentIndex + 1}
           totalPuzzles={queue.length}
+          streak={streak}
           isRetry={retriedSet.has(blunderKey)}
           onCorrect={handleCorrect}
           onWrong={handleWrong}
