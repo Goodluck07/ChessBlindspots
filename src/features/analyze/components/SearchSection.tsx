@@ -23,7 +23,7 @@ export function SearchSection({
   gamesToAnalyze,
   onSetGamesToAnalyze,
   lastAnalyzedUsername,
-}: SearchSectionProps) {
+}: Readonly<SearchSectionProps>) {
   return (
     <section className="bg-[#1e1c1a] rounded-xl p-6 mb-8 border border-[#3d3a37]">
       <UsernameForm onSubmit={onAnalyzeGames} loading={loading} />

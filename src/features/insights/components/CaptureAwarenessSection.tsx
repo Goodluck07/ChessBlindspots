@@ -8,7 +8,7 @@ interface CaptureAwarenessSectionProps {
 export function CaptureAwarenessSection({
   missedCaptures,
   blunderWasCapture,
-}: CaptureAwarenessSectionProps) {
+}: Readonly<CaptureAwarenessSectionProps>) {
   return (
     <Section title="Capture Awareness">
       <div className="flex flex-col gap-4">

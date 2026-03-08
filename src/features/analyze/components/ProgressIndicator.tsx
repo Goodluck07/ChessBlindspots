@@ -10,7 +10,7 @@ export function ProgressIndicator({
   loading,
   gamesAnalyzed,
   gamesTotal,
-}: ProgressIndicatorProps) {
+}: Readonly<ProgressIndicatorProps>) {
   const pct = gamesTotal > 0 ? Math.round((gamesAnalyzed / gamesTotal) * 100) : 0;
 
   return (

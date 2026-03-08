@@ -13,7 +13,7 @@ export function BlundersByPieceMovedSection({
   total,
   worstPiece,
   pieceNames,
-}: BlundersByPieceMovedSectionProps) {
+}: Readonly<BlundersByPieceMovedSectionProps>) {
   return (
     <Section title="Blunders by Piece Moved">
       {["P", "N", "B", "R", "Q", "K"].map((p) => (

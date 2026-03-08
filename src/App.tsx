@@ -6,11 +6,12 @@ function ScrollToTop() {
   useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
   return null;
 }
-import { Chess } from "chess.js";
+import { Chess, type Square } from "chess.js";
 import { LandingPage } from "./pages/Landing";
 import { AnalyzePage } from "./pages/Analyze";
 import { InsightsPage } from "./pages/Insights";
 import { PracticePage } from "./pages/Practice";
+import { DrillSessionPage } from "./pages/DrillSession";
 import { NotFoundPage } from "./pages/NotFound";
 import { fetchRecentGames } from "./services/chesscom";
 import { evaluatePosition, destroyEngine } from "./services/stockfish";
@@ -19,82 +20,6 @@ import type { Blunder, ChessGame, TimeClass } from "./types";
 const BLUNDER_THRESHOLD = 200; // centipawns (2 pawns)
 const MAX_BLUNDERS_TO_SHOW = 5;
 const ANALYSIS_DEPTH = 12;
-const CACHE_EXPIRY_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-// ── Cache utilities ──────────────────────────────────────────
-interface CachedAnalysis {
-  username: string;
-  blunders: Blunder[];
-  gamesAnalyzed: number;
-  timestamp: number;
-}
-
-function cacheKey(username: string) {
-  return `chessblinds_${username.toLowerCase()}`;
-}
-
-function saveToCache(
-  username: string,
-  blunders: Blunder[],
-  gamesAnalyzed: number,
-) {
-  try {
-    const data: CachedAnalysis = {
-      username,
-      blunders,
-      gamesAnalyzed,
-      timestamp: Date.now(),
-    };
-    localStorage.setItem(cacheKey(username), JSON.stringify(data));
-    const names: string[] = JSON.parse(
-      localStorage.getItem("chessblinds_usernames") || "[]",
-    );
-    if (!names.includes(username.toLowerCase())) {
-      names.push(username.toLowerCase());
-      localStorage.setItem("chessblinds_usernames", JSON.stringify(names));
-    }
-  } catch {
-    /* storage full or unavailable */
-  }
-}
-
-function loadFromCache(username: string): CachedAnalysis | null {
-  try {
-    const raw = localStorage.getItem(cacheKey(username));
-    if (!raw) return null;
-    const data: CachedAnalysis = JSON.parse(raw);
-    if (Date.now() - data.timestamp > CACHE_EXPIRY_MS) {
-      localStorage.removeItem(cacheKey(username));
-      return null;
-    }
-    return data;
-  } catch {
-    return null;
-  }
-}
-
-function getAllCached(): CachedAnalysis[] {
-  try {
-    const names: string[] = JSON.parse(
-      localStorage.getItem("chessblinds_usernames") || "[]",
-    );
-    return names
-      .map((n) => loadFromCache(n))
-      .filter((d): d is CachedAnalysis => d !== null)
-      .sort((a, b) => b.timestamp - a.timestamp);
-  } catch {
-    return [];
-  }
-}
-
-function timeAgo(ts: number): string {
-  const diff = Date.now() - ts;
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  return `${Math.floor(hrs / 24)}d ago`;
-}
 
 function App() {
   const [loading, setLoading] = useState(false);
@@ -108,17 +33,6 @@ function App() {
     "all",
   );
   const [viewMode, setViewMode] = useState<"overall" | "byGame">("overall");
-
-  // Load a previously cached analysis
-  const restoreFromCache = (username: string) => {
-    const cached = loadFromCache(username);
-    if (!cached) return;
-    setAllBlunders(cached.blunders);
-    setGamesAnalyzed(cached.gamesAnalyzed);
-    setProgress(
-      `Loaded saved analysis for "${cached.username}" (${timeAgo(cached.timestamp)})`,
-    );
-  };
 
   // Filter blunders based on selected time class
   const filteredBlunders =
@@ -190,9 +104,6 @@ function App() {
       // Store all blunders (filtering happens in render)
       setAllBlunders(allBlunders);
 
-      // Save to cache for future visits
-      saveToCache(username, allBlunders, games.length);
-
       if (allBlunders.length === 0) {
         setProgress("No blunders found! You played well.");
       } else {
@@ -252,49 +163,31 @@ function App() {
           <InsightsPage
             blunders={filteredBlunders}
             gamesAnalyzed={gamesAnalyzed}
-            cachedAnalyses={getAllCached()}
-            onLoadCache={restoreFromCache}
           />
         }
       />
-      <Route path="/practice" element={<PracticePage />} />
+      <Route
+        path="/practice"
+        element={<PracticePage blunders={filteredBlunders} />}
+      />
+      <Route path="/practice/drill" element={<DrillSessionPage />} />
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
     </>
   );
 }
 
-async function analyzeGame(
-  game: ChessGame,
-  username: string,
-): Promise<Blunder[]> {
-  const blunders: Blunder[] = [];
-  const chess = new Chess();
+// ── PGN helpers ────────────────────────────────────────────────────────────
 
-  // Determine which color the user played
-  const playerColor: "white" | "black" =
-    game.white.toLowerCase() === username.toLowerCase() ? "white" : "black";
+function parseOpening(pgn: string): string | undefined {
+  const openingMatch = /\[Opening "([^"]+)"\]/.exec(pgn);
+  if (openingMatch) return openingMatch[1];
 
-  // Get opponent name
-  const opponent = playerColor === "white" ? game.black : game.white;
-
-  // Parse game result from PGN
-  const resultMatch = game.pgn.match(/\[Result "([^"]+)"\]/);
-  const resultStr = resultMatch ? resultMatch[1] : "*";
-
-  // Extract opening name from PGN headers
-  const openingMatch = game.pgn.match(/\[Opening "([^"]+)"\]/);
-  const ecoUrlMatch = game.pgn.match(/\[ECOUrl "([^"]+)"\]/);
-  const ecoMatch = game.pgn.match(/\[ECO "([^"]+)"\]/);
-  let opening: string | undefined;
-  if (openingMatch) {
-    opening = openingMatch[1];
-  } else if (ecoUrlMatch) {
-    // e.g. https://www.chess.com/openings/Nimzowitsch-Larsen-Attack-Classical-Variation-2.Bb2-Nf6
+  const ecoUrlMatch = /\[ECOUrl "([^"]+)"\]/.exec(pgn);
+  if (ecoUrlMatch) {
     const slug = ecoUrlMatch[1].split("/").pop() ?? "";
     if (slug) {
       const words = slug.split("-");
-      // Stop before "with", "without", "vs", or any word starting with a digit (move notations like "3...Bf5")
       const stopWords = new Set(["with", "without", "vs"]);
       let cutoff = Math.min(words.length, 3);
       for (let i = 0; i < Math.min(words.length, 4); i++) {
@@ -303,140 +196,156 @@ async function analyzeGame(
           break;
         }
       }
-      opening = words.slice(0, Math.max(cutoff, 2)).join(" ");
+      return words.slice(0, Math.max(cutoff, 2)).join(" ");
     }
-  } else if (ecoMatch) {
-    opening = ecoMatch[1]; // fallback: bare ECO code like "A01"
   }
-  let gameResult: "win" | "loss" | "draw" = "draw";
-  if (resultStr === "1-0") {
-    gameResult = playerColor === "white" ? "win" : "loss";
-  } else if (resultStr === "0-1") {
-    gameResult = playerColor === "black" ? "win" : "loss";
-  }
+
+  const ecoMatch = /\[ECO "([^"]+)"\]/.exec(pgn);
+  return ecoMatch?.[1];
+}
+
+function parseGameResult(
+  pgn: string,
+  playerColor: "white" | "black",
+): "win" | "loss" | "draw" {
+  const resultMatch = /\[Result "([^"]+)"\]/.exec(pgn);
+  const resultStr = resultMatch?.[1] ?? "*";
+  if (resultStr === "1-0") return playerColor === "white" ? "win" : "loss";
+  if (resultStr === "0-1") return playerColor === "black" ? "win" : "loss";
+  return "draw";
+}
+
+function getGamePhase(
+  fullMoveNum: number,
+): "opening" | "middlegame" | "endgame" {
+  if (fullMoveNum <= 10) return "opening";
+  if (fullMoveNum >= 40) return "endgame";
+  return "middlegame";
+}
+
+function isBestMoveCapture(
+  fen: string,
+  bestMoveTo: string,
+  playerColor: "white" | "black",
+): boolean {
+  const tempChess = new Chess(fen);
+  const piece = tempChess.get(bestMoveTo as Square);
+  const playerColorChar = playerColor === "white" ? "w" : "b";
+  return piece != null && piece.color !== playerColorChar;
+}
+
+async function createBlunderIfValid(
+  fenBefore: string,
+  prevEval: number,
+  currentEval: number,
+  move: { san: string; from: string; to: string },
+  moveNumber: number,
+  playerColor: "white" | "black",
+  game: ChessGame,
+  opponent: string,
+  gameResult: "win" | "loss" | "draw",
+  opening: string | undefined,
+  totalPlayerMoves: number,
+): Promise<Blunder | null> {
+  const evalDrop = prevEval - currentEval;
+  if (evalDrop < BLUNDER_THRESHOLD) return null;
+
+  const bestResult = await evaluatePosition(fenBefore, ANALYSIS_DEPTH);
+  const isValidMove =
+    bestResult.bestMove &&
+    bestResult.bestMove.length >= 4 &&
+    bestResult.bestMove !== "(none)" &&
+    bestResult.bestMove !== "timeout";
+
+  if (!isValidMove) return null;
+
+  const bestMoveFrom = bestResult.bestMove.slice(0, 2);
+  const bestMoveTo = bestResult.bestMove.slice(2, 4);
+  const pieceMoved = /^[KQRBN]/.exec(move.san) ? move.san[0] : "P";
+  const fullMoveNum = Math.ceil(moveNumber / 2);
+
+  return {
+    fen: fenBefore,
+    movePlayed: move.san,
+    moveFrom: move.from,
+    moveTo: move.to,
+    bestMove: bestResult.bestMove,
+    bestMoveFrom,
+    bestMoveTo,
+    evalBefore: prevEval,
+    evalAfter: currentEval,
+    evalDrop,
+    moveNumber: fullMoveNum,
+    playerColor,
+    gameUrl: game.url,
+    opponent,
+    gameResult,
+    timeClass: game.timeClass,
+    pieceMoved,
+    wasCapture: move.san.includes("x"),
+    bestMoveWasCapture: isBestMoveCapture(fenBefore, bestMoveTo, playerColor),
+    gamePhase: getGamePhase(fullMoveNum),
+    opening,
+    totalPlayerMoves,
+  };
+}
+
+// ── Main analysis ───────────────────────────────────────────────────────────
+
+async function analyzeGame(
+  game: ChessGame,
+  username: string,
+): Promise<Blunder[]> {
+  const blunders: Blunder[] = [];
+  const chess = new Chess();
+
+  const playerColor: "white" | "black" =
+    game.white.toLowerCase() === username.toLowerCase() ? "white" : "black";
+  const opponent = playerColor === "white" ? game.black : game.white;
+  const gameResult = parseGameResult(game.pgn, playerColor);
+  const opening = parseOpening(game.pgn);
 
   try {
     chess.loadPgn(game.pgn);
   } catch {
-    // Skip games that can't be parsed
     return blunders;
   }
 
-  // Get all moves from the game
   const moves = chess.history({ verbose: true });
-
-  // Reset to starting position
   chess.reset();
-
   const totalPlayerMoves = Math.ceil(moves.length / 2);
-
   let prevEval = 0;
   let moveNumber = 0;
 
   for (const move of moves) {
     moveNumber++;
+    const fenBefore = chess.fen();
+    chess.move(move.san);
+
     const isPlayerMove =
       (playerColor === "white" && moveNumber % 2 === 1) ||
       (playerColor === "black" && moveNumber % 2 === 0);
 
-    // Get position before the move
-    const fenBefore = chess.fen();
-
-    // Make the move
-    chess.move(move.san);
-
     if (!isPlayerMove) {
-      // Update eval for opponent's move but don't check for blunders
-      // After opponent's move, it's player's turn - score is from player's POV
       try {
-        const result = await evaluatePosition(chess.fen(), ANALYSIS_DEPTH);
-        prevEval = result.score;
+        prevEval = (await evaluatePosition(chess.fen(), ANALYSIS_DEPTH)).score;
       } catch {
-        // Continue if evaluation fails
+        // continue
       }
       continue;
     }
 
-    // Evaluate position after player's move
-    // After player's move, it's opponent's turn - negate to get player's POV
     try {
-      const result = await evaluatePosition(chess.fen(), ANALYSIS_DEPTH);
-      const currentEval = -result.score;
-
-      // Check for blunder (eval drop from player's perspective)
-      const evalDrop = prevEval - currentEval;
-
-      if (evalDrop >= BLUNDER_THRESHOLD) {
-        // Get best move from position before the blunder
-        const bestResult = await evaluatePosition(fenBefore, ANALYSIS_DEPTH);
-
-        // Skip if Stockfish returned no valid best move (e.g. checkmate, timeout)
-        const isValidMove =
-          bestResult.bestMove &&
-          bestResult.bestMove.length >= 4 &&
-          bestResult.bestMove !== "(none)" &&
-          bestResult.bestMove !== "timeout";
-        if (!isValidMove) {
-          prevEval = currentEval;
-          continue;
-        }
-
-        // Parse best move UCI notation (e.g., "e2e4" -> from: "e2", to: "e4")
-        const bestMoveFrom = bestResult.bestMove.slice(0, 2);
-        const bestMoveTo = bestResult.bestMove.slice(2, 4);
-
-        // Determine piece moved from SAN
-        const pieceMoved = move.san.match(/^[KQRBN]/) ? move.san[0] : "P";
-
-        // Check if move was a capture
-        const wasCapture = move.san.includes("x");
-
-        // Check if best move was a capture (has ENEMY piece on destination square)
-        const tempChess = new Chess(fenBefore);
-        const destSquare = bestMoveTo as import("chess.js").Square;
-        const pieceOnDest = tempChess.get(destSquare);
-        const playerColorChar = playerColor === "white" ? "w" : "b";
-        const bestMoveWasCapture =
-          pieceOnDest != null && pieceOnDest.color !== playerColorChar;
-
-        // Determine game phase based on move number and material
-        let gamePhase: "opening" | "middlegame" | "endgame" = "middlegame";
-        const fullMoveNum = Math.ceil(moveNumber / 2);
-        if (fullMoveNum <= 10) {
-          gamePhase = "opening";
-        } else if (fullMoveNum >= 40) {
-          gamePhase = "endgame";
-        }
-
-        blunders.push({
-          fen: fenBefore,
-          movePlayed: move.san,
-          moveFrom: move.from,
-          moveTo: move.to,
-          bestMove: bestResult.bestMove,
-          bestMoveFrom,
-          bestMoveTo,
-          evalBefore: prevEval,
-          evalAfter: currentEval,
-          evalDrop,
-          moveNumber: fullMoveNum,
-          playerColor,
-          gameUrl: game.url,
-          opponent,
-          gameResult,
-          timeClass: game.timeClass,
-          pieceMoved,
-          wasCapture,
-          bestMoveWasCapture,
-          gamePhase,
-          opening,
-          totalPlayerMoves,
-        });
-      }
-
+      const postResult = await evaluatePosition(chess.fen(), ANALYSIS_DEPTH);
+      const currentEval = -postResult.score;
+      const blunder = await createBlunderIfValid(
+        fenBefore, prevEval, currentEval, move, moveNumber,
+        playerColor, game, opponent, gameResult, opening, totalPlayerMoves,
+      );
+      if (blunder) blunders.push(blunder);
       prevEval = currentEval;
     } catch {
-      // Continue if evaluation fails
+      // continue
     }
   }
 

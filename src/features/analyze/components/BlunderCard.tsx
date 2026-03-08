@@ -67,7 +67,7 @@ function formatMoveWithSquares(
 
   let move = san.replace(/[+#]$/, "");
 
-  const promoMatch = move.match(/=([QRBN])$/);
+  const promoMatch = /=([QRBN])$/.exec(move);
   let promotion = "";
   if (promoMatch) {
     promotion = `, promoted to ${pieces[promoMatch[1]]}`;
@@ -75,7 +75,7 @@ function formatMoveWithSquares(
   }
 
   const isCapture = move.includes("x");
-  const pieceChar = move.match(/^[KQRBN]/)?.[0];
+  const pieceChar = /^[KQRBN]/.exec(move)?.[0];
   const piece = pieceChar ? pieces[pieceChar] : "Pawn";
 
   if (isCapture) {
@@ -123,7 +123,7 @@ function getSeverity(evalDrop: number): {
   }
 }
 
-export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
+export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardProps>) {
   const [hovered, setHovered] = useState(false);
   const [showBadMove, setShowBadMove] = useState(true);
 

@@ -11,7 +11,7 @@ export function BlundersByMoveNumberSection({
   moveBuckets,
   total,
   peakBucket,
-}: BlundersByMoveNumberSectionProps) {
+}: Readonly<BlundersByMoveNumberSectionProps>) {
   return (
     <Section title="When Do You Blunder? (by Move Number)">
       {moveBuckets.map((b) => (

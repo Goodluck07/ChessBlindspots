@@ -7,7 +7,7 @@ interface GameCardProps {
   blunders: Blunder[];
 }
 
-export function GameCard({ gameUrl, blunders }: GameCardProps) {
+export function GameCard({ gameUrl, blunders }: Readonly<GameCardProps>) {
   const [expanded, setExpanded] = useState(false);
   const game = blunders[0];
 

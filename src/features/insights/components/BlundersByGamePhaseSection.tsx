@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { BarRow } from "./BarRow";
 import { Section } from "./Section";
 
@@ -13,7 +14,7 @@ interface BlundersByGamePhaseSectionProps {
 export function BlundersByGamePhaseSection({
   byPhase,
   total,
-}: BlundersByGamePhaseSectionProps) {
+}: Readonly<BlundersByGamePhaseSectionProps>) {
   return (
     <Section title="Blunders by Game Phase">
       <BarRow
@@ -34,7 +35,20 @@ export function BlundersByGamePhaseSection({
         total={total}
         color="#5b9a32"
       />
-      <p className="mt-4 text-[#989795] text-[0.82em] leading-relaxed">
+      <div className="flex gap-2 flex-wrap mt-1">
+        {(["middlegame", "opening", "endgame"] as const).map((phase) =>
+          byPhase[phase] > 0 ? (
+            <Link
+              key={phase}
+              to={`/practice?phase=${phase}`}
+              className="text-xs text-[#5a7a9a] hover:text-[#81b64c] transition-colors capitalize"
+            >
+              Drill {phase} →
+            </Link>
+          ) : null,
+        )}
+      </div>
+      <p className="mt-3 text-[#989795] text-[0.82em] leading-relaxed">
         {byPhase.middlegame >= byPhase.opening &&
         byPhase.middlegame >= byPhase.endgame
           ? "Most blunders in the middlegame — train tactical pattern recognition."

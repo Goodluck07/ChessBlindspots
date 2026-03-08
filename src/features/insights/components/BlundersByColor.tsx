@@ -5,7 +5,7 @@ interface BlundersByColorProps {
   total: number;
 }
 
-export function BlundersByColor({ byColor, total }: BlundersByColorProps) {
+export function BlundersByColor({ byColor, total }: Readonly<BlundersByColorProps>) {
   return (
     <Section title="Blunders by Color">
       <div className="flex gap-4 flex-wrap">

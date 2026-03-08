@@ -129,8 +129,10 @@ function detectPatterns(blunders: Blunder[]): Pattern[] {
   // Average eval drop
   const avgDrop =
     blunders.reduce((sum, b) => sum + b.evalDrop, 0) / blunders.length / 100;
-  const severityText =
-    avgDrop >= 5 ? "severe" : avgDrop >= 3 ? "significant" : "moderate";
+  let severityText: string;
+  if (avgDrop >= 5) severityText = "severe";
+  else if (avgDrop >= 3) severityText = "significant";
+  else severityText = "moderate";
   patterns.push({
     type: "avg",
     icon: "-",
@@ -249,7 +251,7 @@ function generateSummary(blunders: Blunder[]): TakeawaySummary {
   return { main, details };
 }
 
-export function BlunderSummary({ blunders }: BlunderSummaryProps) {
+export function BlunderSummary({ blunders }: Readonly<BlunderSummaryProps>) {
   const [expandedCard, setExpandedCard] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
 
@@ -289,7 +291,7 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
 
           return (
             <div
-              key={i}
+              key={pattern.type}
               onClick={() => handleCardClick(i)}
               onMouseEnter={() => setHoveredCard(i)}
               onMouseLeave={() => setHoveredCard(null)}
@@ -369,7 +371,7 @@ export function BlunderSummary({ blunders }: BlunderSummaryProps) {
           <div className="flex flex-col gap-2">
             {summary.details.map((detail, i) => (
               <div
-                key={i}
+                key={detail}
                 className="flex items-start gap-2.5 p-2 bg-black/20 rounded-lg"
               >
                 <span className="text-green-600 text-sm font-semibold min-w-5">
