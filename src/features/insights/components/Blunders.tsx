@@ -98,11 +98,41 @@ export function Blunders({ blunders, gamesAnalyzed }: BlundersProps) {
   return (
     <div className="fade-in flex flex-col gap-5">
       <section>
-        <h1 className="m-0 mb-1 text-white text-[1.6em]">Insights</h1>
-        <p className="m-0 text-[#989795] text-sm">
-          Based on {total} blunder{total !== 1 ? "s" : ""} across{" "}
-          {gamesAnalyzed} game{gamesAnalyzed !== 1 ? "s" : ""}
-        </p>
+        <div className="mb-5">
+          <h1 className="m-0 mb-1 text-white text-[1.6em]">Insights</h1>
+          <p className="m-0 text-[#989795] text-sm">
+            Based on {total} blunder{total !== 1 ? "s" : ""} across{" "}
+            {gamesAnalyzed} game{gamesAnalyzed !== 1 ? "s" : ""}
+          </p>
+        </div>
+
+        {/* Hero stat row */}
+        <div className="grid grid-cols-3 gap-0 bg-[#1e1c1a] border border-[#3d3a37] rounded-xl overflow-hidden">
+          <div className="text-center py-5 px-4">
+            <div className="text-[2.4em] font-extrabold text-red-500 leading-none">
+              {total}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Total Blunders
+            </div>
+          </div>
+          <div className="text-center py-5 px-4 border-x border-[#3d3a37]">
+            <div className="text-[2.4em] font-extrabold text-yellow-500 leading-none">
+              {avgDrop.toFixed(1)}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Avg Drop (pawns)
+            </div>
+          </div>
+          <div className="text-center py-5 px-4">
+            <div className="text-[2.4em] font-extrabold text-orange-400 leading-none">
+              {worstDrop.toFixed(1)}
+            </div>
+            <div className="text-[#989795] text-xs uppercase tracking-wide mt-1.5">
+              Worst Drop
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Stat cards */}

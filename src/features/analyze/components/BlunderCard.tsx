@@ -95,6 +95,13 @@ function formatUciMove(uci: string): string {
   return `${from} → ${to}`;
 }
 
+function getSeverityTint(evalDrop: number): string {
+  const pawns = evalDrop / 100;
+  if (pawns >= 6) return "rgba(220, 38, 38, 0.07)";
+  if (pawns >= 4) return "rgba(220, 38, 38, 0.05)";
+  return "rgba(202, 138, 4, 0.05)";
+}
+
 // Get severity level based on eval drop
 function getSeverity(evalDrop: number): {
   label: string;
@@ -234,7 +241,11 @@ export function BlunderCard({ blunder, compact = false }: BlunderCardProps) {
     <div
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
-      className={`fade-in transition-all duration-200 border border-[#3d3a37] rounded-lg bg-[#272522] \
+      style={{
+        backgroundColor: "#272522",
+        backgroundImage: `linear-gradient(135deg, ${getSeverityTint(blunder.evalDrop)} 0%, transparent 60%)`,
+      }}
+      className={`fade-in transition-all duration-200 border border-[#3d3a37] rounded-lg \
         ${hovered ? "shadow-[0_8px_24px_rgba(0,0,0,0.4)] -translate-y-0.5" : "shadow-[0_2px_8px_rgba(0,0,0,0.2)] translate-y-0"} \
         ${compact ? "p-4" : "p-4.5"}`}
     >
