@@ -2,7 +2,7 @@ interface ErrorMessageProps {
   error: string | null;
 }
 
-export function ErrorMessage({ error }: ErrorMessageProps) {
+export function ErrorMessage({ error }: Readonly<ErrorMessageProps>) {
   return (
     <>
       {error && (

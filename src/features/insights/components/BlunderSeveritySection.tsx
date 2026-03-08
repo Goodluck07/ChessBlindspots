@@ -8,12 +8,18 @@ interface BlunderSeveritySectionProps {
   total: number;
 }
 
+function getSeverityMessage(major: number, moderate: number): string {
+  return major > moderate
+    ? "Most mistakes are major (3–5 pawns) — serious enough to flip the result."
+    : "Your blunders are mostly moderate (2–3 pawns) — smaller mistakes that add up over time.";
+}
+
 export function BlunderSeveritySection({
   critical,
   major,
   moderate,
   total,
-}: BlunderSeveritySectionProps) {
+}: Readonly<BlunderSeveritySectionProps>) {
   return (
     <Section title="Blunder Severity">
       <BarRow
@@ -37,9 +43,7 @@ export function BlunderSeveritySection({
       <p className="mt-4 text-[#989795] text-[0.82em] leading-relaxed">
         {critical > 0
           ? `${critical} critical blunder${critical > 1 ? "s" : ""} — these are game-ending mistakes. Review them first on the Analyze page.`
-          : major > moderate
-            ? "Most mistakes are major (3–5 pawns) — serious enough to flip the result."
-            : "Your blunders are mostly moderate (2–3 pawns) — smaller mistakes that add up over time."}
+          : getSeverityMessage(major, moderate)}
       </p>
     </Section>
   );

@@ -15,7 +15,7 @@ const PIECE_NAMES: Record<string, string> = {
 export function WorstBlunderSection({
   worstBlunder,
   worstDrop,
-}: WorstBlunderSectionProps) {
+}: Readonly<WorstBlunderSectionProps>) {
   const [showBoard, setShowBoard] = useState(false);
 
   const {

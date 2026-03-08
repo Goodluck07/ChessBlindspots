@@ -8,7 +8,7 @@ interface BarRowProps {
   onClick?: () => void;
 }
 
-export function BarRow({ label, count, total, color, sublabel, expanded, onClick }: BarRowProps) {
+export function BarRow({ label, count, total, color, sublabel, expanded, onClick }: Readonly<BarRowProps>) {
   const pct = total === 0 ? 0 : Math.round((count / total) * 100);
   return (
     <div className="mb-3.5">

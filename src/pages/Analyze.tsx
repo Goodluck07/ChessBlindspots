@@ -22,7 +22,7 @@ export function AnalyzePage({
   onSetGamesToAnalyze,
   onSetTimeClassFilter,
   onSetViewMode,
-}: AnalyzeViewProps) {
+}: Readonly<AnalyzeViewProps>) {
   return (
     <DashboardLayout>
       <AnalyzeView

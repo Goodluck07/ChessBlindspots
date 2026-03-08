@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import type { Blunder } from "../../../types";
 import { BarRow } from "./BarRow";
 import { Section } from "./Section";
@@ -13,7 +14,7 @@ export function BlunderOpeningsSection({
   topOpenings,
   total,
   blunders,
-}: BlunderOpeningsSectionProps) {
+}: Readonly<BlunderOpeningsSectionProps>) {
   const [expandedOpening, setExpandedOpening] = useState<string | null>(null);
 
   const toggle = (name: string) =>
@@ -45,6 +46,12 @@ export function BlunderOpeningsSection({
 
                 {isExpanded && (
                   <div className="mb-4 mt-1 pl-3 border-l-2 border-[#3d3a37] flex flex-col gap-1.5">
+                    <Link
+                      to={`/practice?opening=${encodeURIComponent(name)}`}
+                      className="text-xs text-[#5a7a9a] hover:text-[#81b64c] transition-colors mb-0.5 self-start"
+                    >
+                      Drill this opening →
+                    </Link>
                     {openingBlunders.map((b, i) => (
                       <div
                         key={i}
@@ -63,6 +70,14 @@ export function BlunderOpeningsSection({
                         <span className="text-[#989795]">
                           (-{(b.evalDrop / 100).toFixed(1)})
                         </span>
+                        <a
+                          href={b.gameUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#5a7a9a] hover:text-[#81b64c] transition-colors"
+                        >
+                          vs {b.opponent} ↗
+                        </a>
                       </div>
                     ))}
                   </div>

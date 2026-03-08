@@ -5,7 +5,7 @@ interface StatCardProps {
   color: string;
 }
 
-export function StatCard({ label, value, sub, color }: StatCardProps) {
+export function StatCard({ label, value, sub, color }: Readonly<StatCardProps>) {
   return (
     <div
       className="bg-[#1e1c1a] border border-[#3d3a37] rounded-[10px] pl-5 pr-5 py-4 border-l-4"

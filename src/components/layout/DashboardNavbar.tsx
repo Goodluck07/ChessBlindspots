@@ -3,12 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 const pages = [
   { id: "analyze" as const, label: "Analyze", path: "/analyze" },
   { id: "insights" as const, label: "Insights", path: "/insights" },
-  {
-    id: "practice" as const,
-    label: "Practice",
-    path: "/practice",
-    comingSoon: true,
-  },
+  { id: "practice" as const, label: "Practice", path: "/practice" },
 ];
 
 export function DashboardNavbar() {
@@ -32,7 +27,7 @@ export function DashboardNavbar() {
           {/* Nav */}
           <nav className="flex items-center justify-center gap-0.5 bg-[#1e1c1a] rounded-lg p-1 border border-[#3d3a37]">
             {pages.map((page) => {
-              const isActive = location.pathname === page.path;
+              const isActive = location.pathname.startsWith(page.path);
               return (
                 <Link
                   key={page.id}
@@ -45,14 +40,6 @@ export function DashboardNavbar() {
                    }`}
                 >
                   {page.label}
-                  {page.comingSoon && (
-                    <span
-                      className={`ml-1 text-[0.6em] uppercase tracking-wider font-semibold 
-                       ${isActive ? "text-black/70" : "text-green-600"}`}
-                    >
-                      soon
-                    </span>
-                  )}
                 </Link>
               );
             })}

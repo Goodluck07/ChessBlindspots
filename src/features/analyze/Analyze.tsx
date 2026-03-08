@@ -44,7 +44,7 @@ export function AnalyzeView({
   onSetGamesToAnalyze,
   onSetTimeClassFilter,
   onSetViewMode,
-}: AnalyzeViewProps) {
+}: Readonly<AnalyzeViewProps>) {
   return (
     <>
       {/* Search Section */}

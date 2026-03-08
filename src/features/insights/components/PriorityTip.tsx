@@ -22,7 +22,7 @@ export function PriorityTip({
   total,
   pieceNames,
   worstPiece,
-}: PriorityTipProps) {
+}: Readonly<PriorityTipProps>) {
   return (
     <div className="bg-linear-to-br from-[rgba(129,182,76,0.12)] to-[rgba(129,182,76,0.04)] p-5 rounded-xl border border-[rgba(129,182,76,0.25)]">
       <div className="text-[#81b64c] font-semibold text-sm uppercase tracking-[0.5px] mb-2.5">
