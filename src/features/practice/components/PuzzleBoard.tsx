@@ -441,7 +441,7 @@ export function PuzzleBoard({
                   <p className="text-[#bababa] text-sm m-0">
                     Move the{" "}
                     <span className="font-semibold">
-                      {PIECE_NAMES[blunder.pieceMoved] ?? "piece"}
+                      {getPieceOnSquare(blunder.fen, blunder.bestMoveFrom) ?? "piece"}
                     </span>{" "}
                     on{" "}
                     <span className="font-mono text-[#e6a23c]">
