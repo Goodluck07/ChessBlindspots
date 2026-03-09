@@ -5,7 +5,10 @@ interface UsernameFormProps {
   loading: boolean;
 }
 
-export function UsernameForm({ onSubmit, loading }: Readonly<UsernameFormProps>) {
+export function UsernameForm({
+  onSubmit,
+  loading,
+}: Readonly<UsernameFormProps>) {
   const [username, setUsername] = useState("");
   const [inputFocused, setInputFocused] = useState(false);
 
@@ -19,7 +22,10 @@ export function UsernameForm({ onSubmit, loading }: Readonly<UsernameFormProps>)
   const isDisabled = loading || !username.trim();
 
   return (
-    <form onSubmit={handleSubmit} className="mb-8 flex flex-wrap gap-3">
+    <form
+      onSubmit={handleSubmit}
+      className="mb-8 flex flex-col sm:flex-row flex-wrap gap-3"
+    >
       <input
         type="text"
         id="username"
@@ -30,7 +36,7 @@ export function UsernameForm({ onSubmit, loading }: Readonly<UsernameFormProps>)
         disabled={loading}
         onFocus={() => setInputFocused(true)}
         onBlur={() => setInputFocused(false)}
-        className={`py-3 px-4 text-base bg-[#1e1c1a] rounded-md flex-1 min-w-0 text-[#bababa] outline-none transition-colors duration-200 border-2 ${
+        className={`py-3 px-4 text-base bg-[#1e1c1a] rounded-md flex-1 w-full text-[#bababa] outline-none transition-colors duration-200 border-2 ${
           inputFocused ? "border-green-400" : "border-[#3d3a37]"
         }`}
       />

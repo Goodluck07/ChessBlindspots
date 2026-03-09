@@ -28,7 +28,7 @@ export function SearchSection({
     <section className="bg-[#1e1c1a] rounded-xl p-6 mb-8 border border-[#3d3a37]">
       <UsernameForm onSubmit={onAnalyzeGames} loading={loading} />
 
-      <div className="flex flex-wrap gap-6">
+      <div className="flex flex-col sm:flex-row flex-wrap gap-6">
         {/* Time Control Filter */}
         <div className="flex-1 min-w-40">
           <label className="block text-[#989795] text-sm mb-2 uppercase tracking-wide">

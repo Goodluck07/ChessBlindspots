@@ -11,7 +11,8 @@ export function ProgressIndicator({
   gamesAnalyzed,
   gamesTotal,
 }: Readonly<ProgressIndicatorProps>) {
-  const pct = gamesTotal > 0 ? Math.round((gamesAnalyzed / gamesTotal) * 100) : 0;
+  const pct =
+    gamesTotal > 0 ? Math.round((gamesAnalyzed / gamesTotal) * 100) : 0;
 
   return (
     <>
@@ -20,7 +21,7 @@ export function ProgressIndicator({
           {/* Text row */}
           <div className="flex items-center gap-3 text-[#989795] mb-3">
             {loading && (
-              <div className="w-5 h-5 border-2 border-[#3d3a37] border-t-green-600 rounded-full animate-spin flex-shrink-0" />
+              <div className="w-5 h-5 border-2 border-[#3d3a37] border-t-green-600 rounded-full animate-spin shrink-0" />
             )}
             <span className="text-base flex-1">{progress}</span>
             {loading && gamesAnalyzed > 0 && (

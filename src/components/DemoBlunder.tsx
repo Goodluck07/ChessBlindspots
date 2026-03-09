@@ -65,10 +65,10 @@ export function DemoBlunder() {
         </span>
       </div>
 
-      <div className="flex gap-5 flex-wrap">
+      <div className="flex gap-5 flex-col sm:flex-row flex-wrap">
         {/* Chess Board with animated highlights */}
         <div className="flex flex-col gap-2">
-          <div className="w-75 h-75 rounded-sm overflow-hidden shadow-md">
+          <div className="sm:max-w-75 rounded-sm overflow-hidden shadow-md">
             <Chessboard
               options={{
                 position: SAMPLE_FEN,
@@ -91,7 +91,7 @@ export function DemoBlunder() {
         </div>
 
         {/* Explanation */}
-        <div className="flex-1 min-w-62.5 flex flex-col gap-4">
+        <div className="flex-1 flex flex-col gap-4">
           <div
             className={`bg-[#1e1c1a] p-4 rounded border-l-4 border-red-600 transition-opacity duration-300 ${
               showBadMove ? "opacity-100" : "opacity-50"
