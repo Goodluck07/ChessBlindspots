@@ -140,7 +140,10 @@ function getSeverity(evalDrop: number): {
   }
 }
 
-export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardProps>) {
+export function BlunderCard({
+  blunder,
+  compact = false,
+}: Readonly<BlunderCardProps>) {
   const [hovered, setHovered] = useState(false);
   const [showBadMove, setShowBadMove] = useState(true);
 
@@ -273,7 +276,9 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
           >
             {severity.label}
             <span className="opacity-80 text-sm">
-              {blunder.evalDrop > 5000 ? "−M" : `−${(blunder.evalDrop / 100).toFixed(1)}`}
+              {blunder.evalDrop > 5000
+                ? "−M"
+                : `−${(blunder.evalDrop / 100).toFixed(1)}`}
             </span>
           </span>
           <span className="text-[#bababa] font-medium whitespace-nowrap">
@@ -290,11 +295,11 @@ export function BlunderCard({ blunder, compact = false }: Readonly<BlunderCardPr
         )}
       </div>
 
-      <div className="flex gap-4 flex-wrap">
+      <div className="flex gap-4 flex-col sm:flex-row flex-wrap">
         {/* Chessboard */}
         <div className="flex flex-col gap-1.5 shrink-0">
           <div
-            className={`${compact ? "w-55 h-55" : "w-65 h-65"} rounded-md overflow-hidden`}
+            className={`${compact ? "sm:max-w-55" : "sm:max-w-65"} rounded-md overflow-hidden`}
           >
             <Chessboard
               options={{
